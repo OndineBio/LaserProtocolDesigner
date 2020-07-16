@@ -32,7 +32,8 @@ export const BasePlateSelect: FC<BasePlateSelectProps> = ({currentSelected, labw
   useEffect(()=>{
     const blank = Array(12).fill(null).map(() => "")
     currentSelected.forEach(v => {
-      blank[v.slot] = v.type
+      console.log(v.slot, slotToRealIndex(v.slot))
+      blank[slotToRealIndex(v.slot)] = v.type
     });
     setSlotValues(blank)
   },[currentSelected])
@@ -43,6 +44,12 @@ export const BasePlateSelect: FC<BasePlateSelectProps> = ({currentSelected, labw
     const factor = (realIndex % 3 === 0) ? -2 : (realIndex % 3 === 1) ? 0 : 2
     return (12 - realIndex) + factor
   }
+  const slotToRealIndex = (slot: number): number => {
+    const factor = (slot % 3 === 0) ? -2 : (slot % 3 === 1) ? 2 : 0
+    return (slot) + factor -1
+  }
+
+
   const handleChange = (indexOfValue: number, newValue: string) => {
     setSlotValues(prev => {
       prev[indexOfValue] = newValue
