@@ -2,8 +2,6 @@ import React, {useState} from 'react';
 import Container from '@material-ui/core/Container';
 import Box from '@material-ui/core/Box';
 import {
-  Aspirate,
-  DisposeTip,
   Labware,
   LabwareType,
   OpentronsTipRack,
@@ -11,10 +9,9 @@ import {
   Step,
   StepType,
   WellPlate96,
-  Well,
 } from "./datatypes";
 import {StepList} from "./components/StepList";
-import {AppBar, Button, createStyles, Fab, Theme, Toolbar, Typography} from "@material-ui/core";
+import {AppBar, createStyles, Fab, Theme, Toolbar, Typography} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
 import {StepEditDialog} from "./components/dialogs/StepEditDialog";
 import {BasePlateSelect} from "./components/BasePlateSelect";
