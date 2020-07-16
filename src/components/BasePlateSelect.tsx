@@ -35,7 +35,7 @@ export const BasePlateSelect: FC<BasePlateSelectProps> = ({currentSelected, labw
       console.log(v.slot, slotToRealIndex(v.slot))
       blank[slotToRealIndex(v.slot)] = v.type
     });
-    setSlotValues(blank)
+    setSlotValues(blank.reverse())
   },[currentSelected])
 
 
