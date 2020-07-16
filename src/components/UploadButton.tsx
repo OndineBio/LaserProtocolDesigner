@@ -1,7 +1,6 @@
 import {Button} from "@material-ui/core";
 import React, {FC} from "react";
-import FileSaver from "file-saver";
-import {buildPythonProtocolForExport, BuildPythonProtocolOptions, importPythonProtocol} from "../pythonConversion";
+import {importPythonProtocol} from "../pythonConversion";
 import {Labware, Step} from "../datatypes";
 
 interface UploadButtonProps {

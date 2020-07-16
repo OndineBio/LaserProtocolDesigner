@@ -76,10 +76,12 @@ pipette.transfer(${this.volume}, ${this.to}, ${this.from})`;
   id: string = `${Math.floor(Math.random() * 1e6)}`
 
   static fromImportComment(comment: string): Step {
-    const [_, json] = comment.split(";")
+
+    const [, json] = comment.split(";")
     const {from, to, volume} = JSON.parse(json) as { from: JSONWell, to: JSONWell, volume: number }
     return new Transfer({from: fromJSONWelltoWell(from), to: fromJSONWelltoWell(to), volume})
   }
+
 }
 
 export class Laser implements Step {
@@ -105,7 +107,7 @@ laserController.turn_on_laser(seconds_to_off=${this.duration})
   id: string = `${Math.floor(Math.random() * 1e6)}`
 
   static fromImportComment(comment: string): Step {
-    const [_, json] = comment.split(";")
+    const [, json] = comment.split(";")
     const {location, duration} = JSON.parse(json) as { location: JSONWell, duration: number }
 
     return new Laser({location: fromJSONWelltoWell(location), duration})
@@ -132,7 +134,7 @@ pipette.aspirate(${this.volume}, ${this.from.pythonString()})`;
   }
 
   static fromImportComment(comment: string): Step {
-    const [_, json] = comment.split(";")
+    const [, json] = comment.split(";")
     const {from, volume} = JSON.parse(json) as { from: JSONWell, volume: number }
     return new Aspirate({from: fromJSONWelltoWell(from), volume})
   }
@@ -158,7 +160,7 @@ pipette.dispense(${this.volume}, ${this.to.pythonString()})`;
   id: string = `${Math.floor(Math.random() * 1e6)}`
 
   static fromImportComment(comment: string): Step {
-    const [_, json] = comment.split(";")
+    const [, json] = comment.split(";")
     const {to, volume} = JSON.parse(json) as { to: JSONWell, volume: number }
     return new Dispense({to: fromJSONWelltoWell(to), volume})
   }
@@ -234,7 +236,7 @@ ${this.name} = protocol.load_labware('opentrons_96_tiprack_300ul', ${this.slot})
   }
 
   static fromImportComment(comment: string): Labware {
-    const [_, json] = comment.split(";")
+    const [, json] = comment.split(";")
     const {slot} = JSON.parse(json) as { slot: number }
     return new OpentronsTipRack(slot)
   }
@@ -325,7 +327,7 @@ ${this.name} = protocol.load_labware('corning_96_wellplate_360ul_flat', ${this.s
   }
 
   static fromImportComment(comment: string): Labware {
-    const [_, json] = comment.split(";")
+    const [, json] = comment.split(";")
     const {slot} = JSON.parse(json) as { slot: number }
     return new WellPlate96(slot)
   }
