@@ -38,6 +38,7 @@ const useStyles = makeStyles((theme: Theme) =>
     }
   }),
 );
+
 const swapArrayElements = (a: any[], x: number, y: number) => {
   if (a.length === 1) return a;
   a.splice(y, 1, a.splice(x, 1, a[y])[0]);
@@ -104,7 +105,7 @@ export default function App() {
     setSelectedLabware(labwareArray)
   }
   const fileOptions: BuildPythonProtocolOptions = {
-    name:"",
+    name: "",
     author: "",
     description: "",
     labware: selectedLabware,
