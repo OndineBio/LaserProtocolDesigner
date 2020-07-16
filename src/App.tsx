@@ -1,23 +1,41 @@
-import React from 'react';
+import React, {useState} from 'react';
 import Container from '@material-ui/core/Container';
 import Box from '@material-ui/core/Box';
-import {Aspirate, DisposeTip, PlaceHolderStep, Step, StepType} from "./datatypes";
+import {
+  Aspirate,
+  DisposeTip,
+  Labware,
+  LabwareType,
+  OpentronsTipRack,
+  PlaceHolderStep,
+  Step,
+  StepType,
+  WellPlate96,
+  Well,
+} from "./datatypes";
 import {StepList} from "./components/StepList";
 import {AppBar, Button, createStyles, Fab, Theme, Toolbar, Typography} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
-import {Add} from "@material-ui/icons"
-import {StepEditDialog} from "./components/StepEditDialog";
+import {StepEditDialog} from "./components/dialogs/StepEditDialog";
+import {BasePlateSelect} from "./components/BasePlateSelect";
+import {StepNewDialog} from "./components/dialogs/StepNewDialog";
+import {DownloadButton} from "./components/DownloadButton";
+import {BuildPythonProtocolOptions} from "./pythonConversion";
+
+export interface onUpdateSelectedOptions {
+  type: LabwareType,
+  slot: number
+}
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
-    fab: {
-      position: () => "fixed",
-      bottom: "10vw",
-      right: "10vh"
-    },
     title: {
       flexGrow: 1,
     },
+    center: {
+      display: "flex",
+      justifyContent: "center"
+    }
   }),
 );
 const swapArrayElements = (a: any[], x: number, y: number) => {
@@ -28,49 +46,70 @@ const swapArrayElements = (a: any[], x: number, y: number) => {
 export default function App() {
   const classes = useStyles();
   const [selectedStep, setSelectedStep] = React.useState<Step>(new PlaceHolderStep())
-  const [steps, setSteps] = React.useState<Step[]>([
-    new DisposeTip(),
-    new Aspirate({from: 'plate["A4"]', volume: 10}),
-    new DisposeTip(),
-    new DisposeTip(),
-    new DisposeTip(),
-  ])//([] as Step[])
+  const [steps, setSteps] = React.useState<Step[]>([])//([] as Step[])
   const moveUp = (id: string) => {
-    console.log("hello")
     const index = steps.findIndex((val) => val.id === id)
-    console.log(index)
     if (index !== 0) {
       setSteps(prev => {
-        const ret = [...swapArrayElements(prev, index, index - 1)]
-        console.log(prev, ret)
-        return ret;
+        return [...swapArrayElements(prev, index, index - 1)];
       })
     }
   }
   const moveDown = (id: string) => {
     const index = steps.findIndex((val) => val.id === id)
-    if (index !== steps.length-1) {
+    if (index !== steps.length - 1) {
       setSteps(prev => {
-        return [...swapArrayElements(prev, index, index+1)]
+        return [...swapArrayElements(prev, index, index + 1)]
       })
     }
   }
-  const deleteItem = (id:string) => {
+  const deleteItem = (id: string) => {
     const index = steps.findIndex((val) => val.id === id)
     setSteps(prev => {
       prev.splice(index, 1)
       return [...prev]
     })
   }
-  const saveItem = (step:Step) => {
+  const saveItem = (step: Step) => {
     const index = steps.findIndex((val) => val.id === step.id)
     setSteps(prev => {
       prev[index] = step
       return [...prev]
     })
   }
+  const addNewItem = (step: Step) => {
+    setSteps(prev => {
+      return [...prev, step]
+    })
+  }
+  const [newDialogIsOpen, setNewDialogIsOpen] = React.useState<boolean>(false)
 
-  console.log("1",steps)
+  const labwareTypes = [LabwareType.OpentronsTipRack, LabwareType.WellPlate96]
+
+  const [selectedLabware, setSelectedLabware] = useState<Labware[]>([] as Labware[])
+  const onUpdateSelectedLabware = (selected: onUpdateSelectedOptions[]) => {
+    const labwareArray =
+      selected.map(({slot, type}) => {
+        switch (type) {
+          case LabwareType.OpentronsTipRack:
+            return new OpentronsTipRack(slot)
+          case LabwareType.WellPlate96:
+            return new WellPlate96(slot)
+          default:
+            console.error(selected)
+            throw new Error("Invalid Labware Type")
+        }
+
+      })
+    setSelectedLabware(labwareArray)
+  }
+  const fileOptions: BuildPythonProtocolOptions = {
+    name:"",
+    author: "",
+    description: "",
+    labware: selectedLabware,
+    steps: steps
+  }
   return (
     <React.Fragment>
       <AppBar position="static">
@@ -78,29 +117,42 @@ export default function App() {
           <Typography variant="h6" className={classes.title}>
             Laser Protocol Designer
           </Typography>
-          <Button variant={"outlined"} size={"medium"} color="inherit">add</Button>
+          <DownloadButton fileOptions={fileOptions}>Save as Protocol</DownloadButton>
         </Toolbar>
       </AppBar>
+      <BasePlateSelect labware={labwareTypes} onUpdateSelected={onUpdateSelectedLabware}/>
       <Container maxWidth="sm">
         <Box my={4}>
           <StepList
             onClickItem={step => {
-              console.log("hello")
               setSelectedStep(step)
             }}
+            onDelete={deleteItem}
             onMoveUp={moveUp}
             onMoveDown={moveDown}
             steps={steps}
           />
         </Box>
+        <div className={classes.center}>
+          <Fab onClick={() => {
+            setNewDialogIsOpen(true)
+          }} color={"primary"} variant={"extended"}>Add Step</Fab>
+        </div>
       </Container>
-      <StepEditDialog initialStep={selectedStep} handleClose={() => {
+      <StepNewDialog
+        handleClose={() => {
+          setNewDialogIsOpen(false)
+        }}
+        handleSave={addNewItem}
+        open={newDialogIsOpen}
+        availibleLabware={selectedLabware}/>
+      <StepEditDialog
+        availibleLabware={selectedLabware}
+        initialStep={selectedStep} handleClose={() => {
         setSelectedStep(new PlaceHolderStep())
       }} handleSave={step => {
-        console.log("save", step)
+
         saveItem(step)
-      }} handleDelete={step => {
-        deleteItem(step.id)
       }} open={selectedStep.type !== StepType.PLACEHOLDER}/>
     </React.Fragment>
   );
