@@ -18,6 +18,7 @@ import {BasePlateSelect} from "./components/BasePlateSelect";
 import {StepNewDialog} from "./components/dialogs/StepNewDialog";
 import {DownloadButton} from "./components/DownloadButton";
 import {BuildPythonProtocolOptions} from "./pythonConversion";
+import {UploadButton} from "./components/UploadButton";
 
 export interface onUpdateSelectedOptions {
   type: LabwareType,
@@ -115,10 +116,16 @@ export default function App() {
           <Typography variant="h6" className={classes.title}>
             Laser Protocol Designer
           </Typography>
+          <UploadButton setLabware={labware => {
+            setSelectedLabware(labware)
+          }} setSteps={steps => {
+            steps.map(addNewItem)
+          }}>Upload Protocol</UploadButton>
           <DownloadButton fileOptions={fileOptions}>Save as Protocol</DownloadButton>
+
         </Toolbar>
       </AppBar>
-      <BasePlateSelect labware={labwareTypes} onUpdateSelected={onUpdateSelectedLabware}/>
+      <BasePlateSelect labware={labwareTypes} currentSelected={selectedLabware} onUpdateSelected={onUpdateSelectedLabware}/>
       <Container maxWidth="sm">
         <Box my={4}>
           <StepList

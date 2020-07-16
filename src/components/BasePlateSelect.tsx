@@ -1,8 +1,8 @@
-import React, {FC, useState} from "react";
+import React, {FC, useState, useEffect} from "react";
 import {Container, FormControl, Grid, InputLabel, MenuItem, Paper, Select, Typography} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
 import Box from "@material-ui/core/Box";
-import {LabwareType} from "../datatypes";
+import {Labware, LabwareType} from "../datatypes";
 import {onUpdateSelectedOptions} from "../App";
 
 const useStyles = makeStyles(theme => ({
@@ -23,17 +23,26 @@ const useStyles = makeStyles(theme => ({
 interface BasePlateSelectProps {
   labware: LabwareType[]
   onUpdateSelected: (selected: onUpdateSelectedOptions[]) => void
+  currentSelected: Labware[]
 }
 
 
-export const BasePlateSelect: FC<BasePlateSelectProps> = ({labware, onUpdateSelected}) => {
+export const BasePlateSelect: FC<BasePlateSelectProps> = ({currentSelected, labware, onUpdateSelected}) => {
   const classes = useStyles()
+  useEffect(()=>{
+    const blank = Array(12).fill(null).map(() => "")
+    currentSelected.forEach(v => {
+      blank[v.slot] = v.type
+    });
+    setSlotValues(blank)
+  },[currentSelected])
+
+
   const [slotValues, setSlotValues] = useState<string[]>(Array(12).fill(null).map(() => ""))
   const realIndexToSlot = (realIndex: number): number => {
     const factor = (realIndex % 3 === 0) ? -2 : (realIndex % 3 === 1) ? 0 : 2
     return (12 - realIndex) + factor
   }
-
   const handleChange = (indexOfValue: number, newValue: string) => {
     setSlotValues(prev => {
       prev[indexOfValue] = newValue
@@ -52,8 +61,6 @@ export const BasePlateSelect: FC<BasePlateSelectProps> = ({labware, onUpdateSele
       return [...prev]
     })
   }
-
-
   return (
     <Container className={""}>
       <Box my={4}>
