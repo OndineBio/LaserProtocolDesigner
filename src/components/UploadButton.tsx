@@ -71,7 +71,7 @@ export const UploadButton: FC<UploadButtonProps> = ({setSteps,setLabware,  child
   return (
     <React.Fragment>
       <input
-        accept="text/plain"
+        accept="text/x-python"
         style={{display: "none"}}
         id="raised-button-file"
         type="file"
