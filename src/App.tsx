@@ -5,9 +5,9 @@ import {
   Labware,
   LabwareType,
   OpentronsTipRack,
-  PlaceHolderStep,
+  PlaceHolderStep, Reservoir12,
   Step,
-  StepType,
+  StepType, WellPlate12, WellPlate24, WellPlate48, WellPlate6,
   WellPlate96,
 } from "./datatypes";
 import {StepList} from "./components/StepList";
@@ -83,17 +83,36 @@ export default function App() {
   }
   const [newDialogIsOpen, setNewDialogIsOpen] = React.useState<boolean>(false)
 
-  const labwareTypes = [LabwareType.OpentronsTipRack, LabwareType.WellPlate96]
+  const labwareTypes = [
+    LabwareType.OpentronsTipRack,
+    LabwareType.Reservoir12,
+    LabwareType.WellPlate96,
+    LabwareType.WellPlate48,
+    LabwareType.WellPlate24,
+    LabwareType.WellPlate12,
+    LabwareType.WellPlate6,
+  ]
 
   const [selectedLabware, setSelectedLabware] = useState<Labware[]>([] as Labware[])
   const onUpdateSelectedLabware = (selected: onUpdateSelectedOptions[]) => {
     const labwareArray =
       selected.map(({slot, type}) => {
         switch (type) {
-          case LabwareType.OpentronsTipRack:
-            return new OpentronsTipRack(slot)
+
+          case LabwareType.WellPlate6:
+            return new WellPlate6(slot)
+          case LabwareType.WellPlate12:
+            return new WellPlate12(slot)
+          case LabwareType.WellPlate24:
+            return new WellPlate24(slot)
+          case LabwareType.WellPlate48:
+            return new WellPlate48(slot)
           case LabwareType.WellPlate96:
             return new WellPlate96(slot)
+          case LabwareType.Reservoir12:
+            return new Reservoir12(slot)
+          case LabwareType.OpentronsTipRack:
+            return new OpentronsTipRack(slot)
           default:
             console.error(selected)
             throw new Error("Invalid Labware Type")
@@ -125,7 +144,8 @@ export default function App() {
 
         </Toolbar>
       </AppBar>
-      <BasePlateSelect labware={labwareTypes} currentSelected={selectedLabware} onUpdateSelected={onUpdateSelectedLabware}/>
+      <BasePlateSelect labware={labwareTypes} currentSelected={selectedLabware}
+                       onUpdateSelected={onUpdateSelectedLabware}/>
       <Container maxWidth="sm">
         <Box my={4}>
           <StepList

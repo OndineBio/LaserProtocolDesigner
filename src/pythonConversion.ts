@@ -7,7 +7,7 @@ import {
   Laser, OpentronsTipRack,
   PickUpTip,
   Step,
-  Transfer, WellPlate96
+  Transfer, WellPlate12, WellPlate24, WellPlate48, WellPlate6, WellPlate96
 } from "./datatypes";
 
 export interface BuildPythonProtocolOptions {
@@ -86,6 +86,18 @@ export function importPythonProtocol({pythonFile}: { pythonFile: string }): Buil
           break;
         case "WellPlate96":
           labware.push(WellPlate96.fromImportComment(comment))
+          break;
+        case "WellPlate6":
+          labware.push(WellPlate6.fromImportComment(comment))
+          break;
+        case "WellPlate12":
+          labware.push(WellPlate12.fromImportComment(comment))
+          break;
+        case "WellPlate24":
+          labware.push(WellPlate24.fromImportComment(comment))
+          break;
+        case "WellPlate48":
+          labware.push(WellPlate48.fromImportComment(comment))
           break;
         case "meta":
           meta = comment.split(";")[1].split(":");

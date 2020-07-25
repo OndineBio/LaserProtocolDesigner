@@ -205,9 +205,15 @@ export class PickUpTip implements Step {
 }
 
 export enum LabwareType {
-  WellPlate96 = "96 well plate",
-  OpentronsTipRack = "Opentrons Tip Rack"
+  WellPlate96 = "WellPlate96",
+  OpentronsTipRack = "OpentronsTipRack",
+  WellPlate6 = "WellPlate6",
+  WellPlate12 = "WellPlate12",
+  WellPlate24 = "WellPlate24",
+  WellPlate48 = "WellPlate48",
+  Reservoir12 = "Reservoir12",
 }
+
 
 export interface Labware {
   readonly type: LabwareType
@@ -244,8 +250,8 @@ ${this.name} = protocol.load_labware('opentrons_96_tiprack_300ul', ${this.slot})
 
 export interface WellPlate extends Labware {
   readonly wells: Well[];
-  width: number;
-  height: number;
+  numOfNumberWells: number;
+  numOfLetterWells: number;
   isWellPlate: true;
 }
 
@@ -260,7 +266,7 @@ interface JSONWell {
   locationString: string
 }
 
-const fromJSONWelltoWell: (jw: JSONWell) => Well = (jw):Well => {
+const fromJSONWelltoWell: (jw: JSONWell) => Well = (jw): Well => {
   switch (jw.wellPlateType) {
     case LabwareType.WellPlate96:
       const wp = new WellPlate96(jw.slot)
@@ -268,7 +274,6 @@ const fromJSONWelltoWell: (jw: JSONWell) => Well = (jw):Well => {
   }
   throw Error("Unknown Labware")
 }
-
 
 export class Well {
   wellPlate: WellPlate
@@ -298,23 +303,28 @@ export class Well {
 
 }
 
-export class WellPlate96 implements WellPlate {
-  readonly type = LabwareType.WellPlate96
+export class WellPlateN implements WellPlate {
+  readonly type: LabwareType
   readonly name: string; // an unique name
   readonly wells: Well[]; // the wells in this plate
   readonly slot: number;
-  height = 8;
-  width = 12;
+  readonly numOfLetterWells: number; // number of wells on letter side
+  readonly numOfNumberWells: number; // number of wells on number side
+  private readonly loadLabwareString: string;
+  readonly isWellPlate: true = true;
 
-  isWellPlate: true = true;
-
-  constructor(slot: number) {
-    this.slot = slot
-    this.name = "96_well_plate_in_" + slot
+  constructor({numberOfWells, type, slot, numOfLetterWells, numOfNumberWells, loadLabwareString}: { numOfNumberWells: number, numOfLetterWells: number, numberOfWells: number, type: LabwareType, slot: number, loadLabwareString: string }) {
+    this.type = type
     this.wells = []
-    const letters = ["A", "B", "C", "D", "E", "F", "G", "H"];
-    letters.forEach(val => {
-      for (let i = 1; i <= 12; i++) {
+    this.numOfLetterWells = numOfLetterWells;
+    this.numOfNumberWells = numOfNumberWells
+    this.loadLabwareString = loadLabwareString
+    this.slot = slot
+    this.name = "the_" + numberOfWells + "_well_plate_in_" + slot
+    const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"];
+    const usedLetters = letters.slice(0, numOfLetterWells - 1)
+    usedLetters.forEach(val => {
+      for (let i = 1; i <= numOfNumberWells; i++) {
         this.wells.push(new Well(this, val + i))
       }
     })
@@ -322,8 +332,100 @@ export class WellPlate96 implements WellPlate {
 
   getPythonInit(): string {
     return `
-# WellPlate96;${JSON.stringify({slot: this.slot})}
-${this.name} = protocol.load_labware('corning_96_wellplate_360ul_flat', ${this.slot})`;
+# ${this.type};${JSON.stringify({slot: this.slot})}
+${this.name} = protocol.load_labware('${this.loadLabwareString}', ${this.slot})`;
+  }
+
+
+}
+
+
+export class WellPlate6 extends WellPlateN {
+  constructor(slot: number) {
+    super({
+      numberOfWells: 6,
+      type: LabwareType.WellPlate6,
+      numOfLetterWells: 2,
+      numOfNumberWells: 3,
+      loadLabwareString: "corning_6_wellplate_16.8ml_flat",
+      slot
+    });
+  }
+
+  static fromImportComment(comment: string): Labware {
+    const [, json] = comment.split(";")
+    const {slot} = JSON.parse(json) as { slot: number }
+    return new WellPlate6(slot)
+  }
+}
+
+export class WellPlate12 extends WellPlateN {
+  constructor(slot: number) {
+    super({
+      numberOfWells: 12,
+      type: LabwareType.WellPlate12,
+      numOfLetterWells: 3,
+      numOfNumberWells: 4,
+      loadLabwareString: "corning_12_wellplate_6.9ml_flat",
+      slot
+    });
+  }
+
+  static fromImportComment(comment: string): Labware {
+    const [, json] = comment.split(";")
+    const {slot} = JSON.parse(json) as { slot: number }
+    return new WellPlate12(slot)
+  }
+}
+
+export class WellPlate24 extends WellPlateN {
+  constructor(slot: number) {
+    super({
+      numberOfWells: 24,
+      type: LabwareType.WellPlate24,
+      numOfLetterWells: 4,
+      numOfNumberWells: 6,
+      loadLabwareString: "corning_24_wellplate_3.4ml_flat",
+      slot
+    });
+  }
+
+  static fromImportComment(comment: string): Labware {
+    const [, json] = comment.split(";")
+    const {slot} = JSON.parse(json) as { slot: number }
+    return new WellPlate24(slot)
+  }
+}
+
+export class WellPlate48 extends WellPlateN {
+  constructor(slot: number) {
+    super({
+      numberOfWells: 48,
+      type: LabwareType.WellPlate48,
+      numOfLetterWells: 6,
+      numOfNumberWells: 8,
+      loadLabwareString: "corning_48_wellplate_1.6ml_flat",
+      slot
+    });
+  }
+
+  static fromImportComment(comment: string): Labware {
+    const [, json] = comment.split(";")
+    const {slot} = JSON.parse(json) as { slot: number }
+    return new WellPlate48(slot)
+  }
+}
+
+export class WellPlate96 extends WellPlateN {
+  constructor(slot: number) {
+    super({
+      numberOfWells: 48,
+      type: LabwareType.WellPlate96,
+      numOfLetterWells: 12,
+      numOfNumberWells: 8,
+      loadLabwareString: "corning_96_wellplate_360ul_flat",
+      slot
+    });
   }
 
   static fromImportComment(comment: string): Labware {
@@ -331,5 +433,34 @@ ${this.name} = protocol.load_labware('corning_96_wellplate_360ul_flat', ${this.s
     const {slot} = JSON.parse(json) as { slot: number }
     return new WellPlate96(slot)
   }
+}
+
+export class Reservoir12 implements WellPlate {
+  isWellPlate: true = true;
+  readonly name: string;
+  numOfLetterWells = 1;
+  numOfNumberWells = 12;
+  readonly slot: number;
+  readonly type = LabwareType.Reservoir12;
+  readonly wells: Well[];
+
+  getPythonInit(): string {
+    return `
+# ${this.type};${JSON.stringify({slot: this.slot})}
+${this.name} = protocol.load_labware('usascientific_12_reservoir_22ml', ${this.slot})`;
+  }
+
+  constructor(slot: number) {
+    this.name = "the_12_well_reservoir_in_slot_" + slot
+    this.slot = slot;
+    this.wells = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(v => new Well(this, "" + v))
+  }
+
+  static fromImportComment(comment: string): Labware {
+    const [, json] = comment.split(";")
+    const {slot} = JSON.parse(json) as { slot: number }
+    return new Reservoir12(slot)
+  }
+
 }
 

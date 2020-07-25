@@ -5,12 +5,12 @@ import {FormControl, Grid, InputLabel, MenuItem, Select, Typography} from "@mate
 import Button from "@material-ui/core/Button";
 
 
-const useWellplateButtonsStyles = makeStyles(theme => ({
+const useWellPlateButtonsStyles = makeStyles(theme => ({
 
   button: {
     borderRadius: "5em",
     // padding:0,
-    // width:"100%"
+    // numOfNumberWells:"100%"
   },
   buttonSelected: {
     backgroundColor: "lightBlue",
@@ -22,11 +22,12 @@ const useWellplateButtonsStyles = makeStyles(theme => ({
     padding: "8px"
   },
   gridItem: {
-    alignItems: "center"
+    display: "flex",
+    justifyContent: "center",
   }
 }))
-const WellplateButtons: FC<{ wellPlate: WellPlate | undefined, currentWell: Well | undefined, setWell: (w: Well) => void }> = ({wellPlate, setWell, currentWell}) => {
-  const classes = useWellplateButtonsStyles()
+const WellPlateButtons: FC<{ wellPlate: WellPlate | undefined, currentWell: Well | undefined, setWell: (w: Well) => void }> = ({wellPlate, setWell, currentWell}) => {
+  const classes = useWellPlateButtonsStyles()
 
   if (wellPlate === undefined) return null
 
@@ -46,7 +47,7 @@ const WellplateButtons: FC<{ wellPlate: WellPlate | undefined, currentWell: Well
           wellPlate.wells.map(
             (w, index) =>
               <Grid className={classes.gridItem} key={index} item
-                    xs={(12 / wellPlate?.width) as boolean | 12 | 8 | "auto" | 1 | 2 | 10 | 4 | 3 | 5 | 6 | 7 | 9 | 11 | undefined}>
+                    xs={(12 / wellPlate?.numOfNumberWells) as boolean | 12 | 8 | "auto" | 1 | 2 | 10 | 4 | 3 | 5 | 6 | 7 | 9 | 11 | undefined}>
                 <Button onClick={() => {
                   setWell(w)
                 }} disabled={index === currentWellIndex} size={"small"} variant={"outlined"}
@@ -71,10 +72,10 @@ interface WellPlatesSelectProps {
   wellPlates: WellPlate[],
   name: string,
   currentWellPlate: WellPlate | undefined,
-  setWellplate: (wellplate: WellPlate) => void
+  setWellPlate: (wellPlate: WellPlate) => void
 }
 
-const WellPlatesSelect: FC<WellPlatesSelectProps> = ({wellPlates, name, currentWellPlate, setWellplate}) => {
+const WellPlatesSelect: FC<WellPlatesSelectProps> = ({wellPlates, name, currentWellPlate, setWellPlate}) => {
   const classes = useWellPlatesSelectStyles()
   if(wellPlates.length === 0) return null
   const indexOfCurrent = wellPlates.findIndex((plate => plate.name === currentWellPlate?.name))
@@ -90,7 +91,7 @@ const WellPlatesSelect: FC<WellPlatesSelectProps> = ({wellPlates, name, currentW
         labelId={"select-label-" + name}
         onChange={e => {
           const index = e.target.value as number
-          setWellplate(wellPlates[index])
+          setWellPlate(wellPlates[index])
         }}
       >
         {wellPlates.map((plate, pIndex,) =>
@@ -121,9 +122,9 @@ interface WellSelectProps {
 export const WellSelect: FC<WellSelectProps> = ({name, hide, availibleLabware, initialWell, well, setWell}) => {
 
   const classes = useWellSelectStyles()
-  const [wellPlate, setWellplate] = React.useState<WellPlate | undefined>(initialWell?.wellPlate)
+  const [wellPlate, setWellPlate] = React.useState<WellPlate | undefined>(initialWell?.wellPlate)
   useEffect(() => {
-    setWellplate(initialWell?.wellPlate)
+    setWellPlate(initialWell?.wellPlate)
   }, [initialWell])
   if (hide) return null
   const wellPlates = availibleLabware
@@ -136,11 +137,11 @@ export const WellSelect: FC<WellSelectProps> = ({name, hide, availibleLabware, i
     }
     <WellPlatesSelect wellPlates={wellPlates}
                       currentWellPlate={wellPlate}
-                      setWellplate={(wellPlate: WellPlate) => {
-                        setWellplate(wellPlate)
+                      setWellPlate={(wellPlate: WellPlate) => {
+                        setWellPlate(wellPlate)
                       }}
                       name={name}/>
-    <WellplateButtons currentWell={well?.wellPlate?.name === wellPlate?.name ? well : undefined}
+    <WellPlateButtons currentWell={well?.wellPlate?.name === wellPlate?.name ? well : undefined}
                       setWell={setWell}
                       wellPlate={wellPlate}/>
   </Fragment>

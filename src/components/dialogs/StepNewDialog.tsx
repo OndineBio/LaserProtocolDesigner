@@ -26,15 +26,14 @@ const useSelectStepStyles = makeStyles(theme => ({
 }))
 
 interface SelectStepProps {
-  currentStepType:StepType|undefined,
+  currentStepType: StepType | undefined,
   setCurrentStepType: (type: StepType) => void,
 }
 
 const SelectStep: FC<SelectStepProps> = ({currentStepType, setCurrentStepType}) => {
   const classes = useSelectStepStyles();
   const options = [StepType.TRANSFER, StepType.LASER, StepType.ASPIRATE, StepType.DISPENSE, StepType.DISPOSE_TIP,
-    StepType.PICK_UP_TIP,
-    StepType.PLACEHOLDER]
+    StepType.PICK_UP_TIP]
   return (
     <FormControl className={classes.formControl}>
       <InputLabel id={"select-step-label"}>Select Step Type</InputLabel>
@@ -81,7 +80,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
         New Step
       </DialogTitle>
       <DialogContent dividers>
-        <SelectStep setCurrentStepType={(s:StepType)=>{
+        <SelectStep setCurrentStepType={(s: StepType) => {
           setCurrentStepType(s)
         }} currentStepType={currentStepType}/>
         {
@@ -93,13 +92,13 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
                           }}
                           well={from}
                           hide={!stepTypeHas(currentStepType, "from")}
-               name={"From"}/>
+                          name={"From"}/>
               <WellSelect availibleLabware={availibleLabware}
                           setWell={(w) => {
                             setTo(w)
                           }}
                           well={to}
-              hide={!stepTypeHas(currentStepType, "to")} name={"Into"}/>
+                          hide={!stepTypeHas(currentStepType, "to")} name={"Into"}/>
               <WellSelect name={"Location"}
                           availibleLabware={availibleLabware}
                           setWell={(w) => {
@@ -111,11 +110,12 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
               {stepTypeHas(currentStepType, "volume") && <TextField type="number" onChange={(e) => {
                 e.persist();
                 setVolume(Number(e.target.value))
-              }} id="outlined-basic" label="Volume [µL]" variant="outlined" value={(volume === 0)?"":volume}/>}
+              }} id="outlined-basic" label="Volume [µL]" variant="outlined" value={(volume === 0) ? "" : volume}/>}
               {stepTypeHas(currentStepType, "duration") && <TextField type="number" onChange={(e) => {
                 e.persist();
                 setDuration(Number(e.target.value))
-              }} id="outlined-basic" label="Duration [sec]" variant="outlined" value={(duration === 0)?"":duration}/>}
+              }} id="outlined-basic" label="Duration [sec]" variant="outlined"
+                                                                      value={(duration === 0) ? "" : duration}/>}
 
 
             </Fragment>)}
@@ -128,26 +128,26 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
         </Button>
 
         <Button autoFocus onClick={() => {
-          let step:Step |undefined = undefined
-          if(currentStepType === undefined) return
+          let step: Step | undefined = undefined
+          if (currentStepType === undefined) return
           switch (currentStepType) {
             case StepType.TRANSFER:
-              if(from && to && volume) {
+              if (from && to && volume) {
                 step = new Transfer({from, to, volume})
               }
               break;
             case StepType.LASER:
-              if(location && duration) {
+              if (location && duration) {
                 step = new Laser({location, duration})
               }
               break;
             case StepType.ASPIRATE:
-              if(from && volume) {
-                step = new Aspirate({from,volume})
+              if (from && volume) {
+                step = new Aspirate({from, volume})
               }
               break;
             case StepType.DISPENSE:
-              if(to && volume) {
+              if (to && volume) {
                 step = new Dispense({to, volume})
               }
               break;
