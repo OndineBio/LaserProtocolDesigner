@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import Container from '@material-ui/core/Container';
 import Box from '@material-ui/core/Box';
 import {
+  copyStep,
   Labware,
   LabwareType,
   OpentronsTipRack,
@@ -11,7 +12,7 @@ import {
   WellPlate96,
 } from "./datatypes";
 import {StepList} from "./components/StepList";
-import {AppBar, createStyles, Fab, Theme, Toolbar, Typography} from "@material-ui/core";
+import {AppBar, createStyles, Fab, TextField, Theme, Toolbar, Typography} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
 import {StepEditDialog} from "./components/dialogs/StepEditDialog";
 import {BasePlateSelect} from "./components/BasePlateSelect";
@@ -33,6 +34,14 @@ const useStyles = makeStyles((theme: Theme) =>
     center: {
       display: "flex",
       justifyContent: "center"
+    },
+    metaContainer: {
+      marginTop: "75px",
+      display: "grid",
+      rowGap: "16px"
+    },
+    fab: {
+      marginBottom: "16px"
     }
   }),
 );
@@ -45,7 +54,8 @@ const swapArrayElements = (a: any[], x: number, y: number) => {
 export default function App() {
   const classes = useStyles();
   const [selectedStep, setSelectedStep] = React.useState<Step>(new PlaceHolderStep())
-  const [steps, setSteps] = React.useState<Step[]>([])//([] as Step[])
+  const [steps, setSteps] = React.useState<Step[]>([])
+  const [highlightedItemId, setHighlightedItemId] = useState<string>()
   const moveUp = (id: string) => {
     const index = steps.findIndex((val) => val.id === id)
     if (index !== 0) {
@@ -71,17 +81,47 @@ export default function App() {
   }
   const saveItem = (step: Step) => {
     const index = steps.findIndex((val) => val.id === step.id)
+    setHighlightedItemId(step.id)
+    setTimeout(() => {
+      setHighlightedItemId(undefined)
+    }, 2000)
     setSteps(prev => {
       prev[index] = step
       return [...prev]
     })
   }
-  const addNewItem = (step: Step) => {
-    setSteps(prev => {
-      return [...prev, step]
-    })
+  const addItem = (step: Step, withColor?: boolean, index?: number,) => {
+    if (withColor) {
+      setHighlightedItemId(step.id)
+      setTimeout(() => {
+        setHighlightedItemId(undefined)
+      }, 2000)
+    }
+    if (index === undefined || index >= steps.length) {
+      setSteps(prev => {
+        return [...prev, step]
+      })
+    } else {
+      setSteps(prev => {
+        const a = [...prev]
+        a.splice(index, 0, step)
+        return a
+      })
+    }
+  }
+  const copyItem = (id: string) => {
+    const index = steps.findIndex((val) => val.id === id)
+    if (index !== -1) {
+      const item = steps[index]
+      const step = copyStep(item)
+      addItem(step, true, index + 1)
+    }
   }
   const [newDialogIsOpen, setNewDialogIsOpen] = React.useState<boolean>(false)
+
+  const [name, setName] = useState<string>("")
+  const [description, setDescription] = useState<string>("")
+  const [author, setAuthor] = useState<string>("")
 
   const labwareTypes = [
     LabwareType.OpentronsTipRack,
@@ -98,7 +138,6 @@ export default function App() {
     const labwareArray =
       selected.map(({slot, type}) => {
         switch (type) {
-
           case LabwareType.WellPlate6:
             return new WellPlate6(slot)
           case LabwareType.WellPlate12:
@@ -122,15 +161,15 @@ export default function App() {
     setSelectedLabware(labwareArray)
   }
   const fileOptions: BuildPythonProtocolOptions = {
-    name: "",
-    author: "",
-    description: "",
+    name,
+    author,
+    description,
     labware: selectedLabware,
     steps: steps
   }
   return (
     <React.Fragment>
-      <AppBar position="static">
+      <AppBar position="fixed">
         <Toolbar>
           <Typography variant="h6" className={classes.title}>
             Laser Protocol Designer
@@ -138,17 +177,53 @@ export default function App() {
           <UploadButton setLabware={labware => {
             setSelectedLabware(labware)
           }} setSteps={steps => {
-            steps.map(addNewItem)
+            setSteps([])
+            steps.map(v => addItem(v))
+          }} setMeta={({name, author, description}: { name: string, author: string, description: string }) => {
+            setName(name)
+            setAuthor(author)
+            setDescription(description)
           }}>Upload Protocol</UploadButton>
           <DownloadButton fileOptions={fileOptions}>Save as Protocol</DownloadButton>
 
         </Toolbar>
       </AppBar>
+      <Container maxWidth="sm" className={classes.metaContainer}>
+
+        <TextField
+          onChange={(e) => {
+            setName(e.target.value)
+          }}
+          label="Protocol Name"
+          variant="outlined"
+          value={name}
+        />
+        <TextField
+          onChange={(e) => {
+            setAuthor(e.target.value)
+          }}
+          label="Author"
+          variant="outlined"
+          value={author}
+        />
+        <TextField
+          onChange={(e) => {
+            setDescription(e.target.value)
+          }}
+          multiline
+          rowsMax={4}
+          label="Description"
+          variant="outlined"
+          value={description}
+        />
+
+      </Container>
       <BasePlateSelect labware={labwareTypes} currentSelected={selectedLabware}
                        onUpdateSelected={onUpdateSelectedLabware}/>
       <Container maxWidth="sm">
         <Box my={4}>
           <StepList
+            onCopy={copyItem}
             onClickItem={step => {
               setSelectedStep(step)
             }}
@@ -156,10 +231,10 @@ export default function App() {
             onMoveUp={moveUp}
             onMoveDown={moveDown}
             steps={steps}
-          />
+            highlightItemId={highlightedItemId}/>
         </Box>
         <div className={classes.center}>
-          <Fab onClick={() => {
+          <Fab className={classes.fab} onClick={() => {
             setNewDialogIsOpen(true)
           }} color={"primary"} variant={"extended"}>Add Step</Fab>
         </div>
@@ -168,7 +243,7 @@ export default function App() {
         handleClose={() => {
           setNewDialogIsOpen(false)
         }}
-        handleSave={addNewItem}
+        handleSave={(s) => addItem(s, true)}
         open={newDialogIsOpen}
         availibleLabware={selectedLabware}/>
       <StepEditDialog
@@ -176,7 +251,6 @@ export default function App() {
         initialStep={selectedStep} handleClose={() => {
         setSelectedStep(new PlaceHolderStep())
       }} handleSave={step => {
-
         saveItem(step)
       }} open={selectedStep.type !== StepType.PLACEHOLDER}/>
     </React.Fragment>

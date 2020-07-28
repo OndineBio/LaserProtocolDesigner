@@ -10,9 +10,9 @@ import {
   Paper,
   Theme, Typography
 } from "@material-ui/core";
-import {Step, StepType} from "../datatypes";
+import {Step} from "../datatypes";
 import {makeStyles} from "@material-ui/core/styles";
-import {ArrowDownward, ArrowUpward, Delete} from "@material-ui/icons";
+import {ArrowDownward, ArrowUpward, Delete, FileCopy} from "@material-ui/icons";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -30,16 +30,22 @@ const useStyles = makeStyles((theme: Theme) =>
       padding: 16,
       display: "flex",
       justifyContent: "center"
+    },
+    highlight: {
+      backgroundColor: "#cff0ff",
+      border: "#a8c5d2 solid 2px"
     }
   }),
 );
 
 interface StepListProps {
   steps: Step[]
+  onCopy: (id: string) => void
   onClickItem: (item: Step) => void
   onMoveUp: (id: string) => void
   onMoveDown: (id: string) => void
   onDelete: (id: string) => void
+  highlightItemId?: string
 }
 
 
@@ -60,16 +66,21 @@ function getListItemText(step: Step) {
   if (step.location) {
     secondaryArray.push("Over: " + step.location)
   }
+  if (step.heightOfAgar) {
+    secondaryArray.push("with Agar height: " + step.heightOfAgar + "mm")
+  }
+  if (step.times) {
+    secondaryArray.push(step.times + " times")
+  }
 
   return <ListItemText
     primary={step.type}
-    secondary={secondaryArray.join(" ")}
+    secondary={secondaryArray.map(v => <Typography variant="body2">{v}</Typography>)}
   />
 }
 
-export const StepList: FC<StepListProps> = ({steps, onClickItem, onMoveUp, onMoveDown, onDelete}) => {
+export const StepList: FC<StepListProps> = ({steps, onCopy, onClickItem, onMoveUp, onMoveDown, onDelete, highlightItemId}) => {
   const classes = useStyles()
-
   return (
     <Paper className={classes.demo}>
       <List>
@@ -77,14 +88,22 @@ export const StepList: FC<StepListProps> = ({steps, onClickItem, onMoveUp, onMov
           No Steps Added
         </Typography></div>}
         {steps.map((step, i) => (
-          <ListItem onClick={() => {
-            if (step.type !== StepType.DISPOSE_TIP && step.type !== StepType.PICK_UP_TIP) onClickItem(step)
-          }} button key={step.id}>
+          <ListItem
+            className={(step.id === highlightItemId) ? classes.highlight : ""}
+            onClick={() => {
+              onClickItem(step)
+            }} button key={step.id}
+          >
             <ListItemIcon>
               {i + 1}.
             </ListItemIcon>
             {getListItemText(step)}
             <ListItemSecondaryAction>
+              <IconButton onClick={() => {
+                onCopy(step.id)
+              }} edge="end" aria-label="move down">
+                <FileCopy/>
+              </IconButton>
               <IconButton onClick={() => {
                 onMoveUp(step.id)
               }} edge="end" aria-label="move up">

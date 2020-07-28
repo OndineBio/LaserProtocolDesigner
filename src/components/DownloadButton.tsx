@@ -11,7 +11,7 @@ export const DownloadButton: FC<DownloadButtonProps> = ({fileOptions, children})
   const onDownload = () => {
     const file = buildPythonProtocolForExport(fileOptions)
     const blob = new Blob([file], {type: "text/plain;charset=utf-8"});
-    FileSaver.saveAs(blob, "protocol.py");
+    FileSaver.saveAs(blob, fileOptions.name.replace(/\s/g, "_")+".py");
   }
 
   return <Button onClick={() => {

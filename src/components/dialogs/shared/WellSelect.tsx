@@ -1,33 +1,70 @@
 import {instanceOfWellPlate, Labware, Well, WellPlate} from "../../../datatypes";
 import React, {FC, Fragment, useEffect} from "react";
 import {makeStyles} from "@material-ui/core/styles";
-import {FormControl, Grid, InputLabel, MenuItem, Select, Typography} from "@material-ui/core";
+import {FormControl, InputLabel, MenuItem, Select, Typography} from "@material-ui/core";
 import Button from "@material-ui/core/Button";
 
 
-const useWellPlateButtonsStyles = makeStyles(theme => ({
+const useWellPlateButtonsStyles = (wellPlate: WellPlate | undefined) => makeStyles(theme => {
 
-  button: {
-    borderRadius: "5em",
-    // padding:0,
-    // numOfNumberWells:"100%"
-  },
-  buttonSelected: {
-    backgroundColor: "lightBlue",
-    color: "#222222 !important"
-  },
-  wellPlateButtonsGrid: {
-    border: "1px solid lightGrey",
-    margin: "16px auto",
-    padding: "8px"
-  },
-  gridItem: {
-    display: "flex",
-    justifyContent: "center",
+  let obj: any = {}
+
+  if (wellPlate) {
+    obj = {
+      labwareGrid: {
+        gap: "8px",
+        display: "grid",
+        gridTemplateColumns: `repeat(${wellPlate.numOfNumberWells}, 1fr)`,
+        gridTemplateRows: `repeat(${wellPlate.numOfLetterWells}, 1fr)`
+      }
+    }
+    for (let row = 0; row < wellPlate?.numOfNumberWells; row++) {
+      for (let col = 0; col < wellPlate?.numOfLetterWells; col++) {
+
+        try {
+          obj[wellPlate?.wells[col * wellPlate?.numOfNumberWells + row].locationString] = {
+            gridColumn: `${row + 1} / span 1`,
+            gridRow: `${col + 1} / span 1`
+          }
+        } catch (e) {
+          console.error("Error in well style", {
+            row,
+            col,
+            wellPlate,
+            wells: wellPlate?.wells,
+            num: col * wellPlate?.numOfNumberWells + row
+          })
+        }
+      }
+    }
   }
-}))
+
+
+  return {
+    ...obj,
+    button: {
+      borderRadius: "5em",
+      // padding:0,
+      // numOfNumberWells:"100%"
+    },
+    buttonSelected: {
+      backgroundColor: "lightBlue",
+      color: "#222222 !important"
+    },
+    wellPlateButtonsGrid: {
+      border: "1px solid lightGrey",
+      margin: "16px auto",
+      padding: "8px"
+    },
+    gridItem: {
+      display: "flex",
+      justifyContent: "center",
+    }
+  }
+})
+
 const WellPlateButtons: FC<{ wellPlate: WellPlate | undefined, currentWell: Well | undefined, setWell: (w: Well) => void }> = ({wellPlate, setWell, currentWell}) => {
-  const classes = useWellPlateButtonsStyles()
+  const classes: any = useWellPlateButtonsStyles(wellPlate)()
 
   if (wellPlate === undefined) return null
 
@@ -35,27 +72,29 @@ const WellPlateButtons: FC<{ wellPlate: WellPlate | undefined, currentWell: Well
   const currentWellIndex = wellPlate.wells.findIndex(w => currentWell?.locationString === w.locationString)
   const getClassForButton = (index: number) => {
     if (index === currentWellIndex) {
-      return classes.buttonSelected + " " + classes.button
+      return classes?.['buttonSelected'] + " " + classes?.['button']
     } else {
-      return classes.button
+      return classes?.['button']
     }
   }
   return (
     <Fragment>
-      <Grid className={classes.wellPlateButtonsGrid} container spacing={1}>
+      <div className={classes?.["labwareGrid"]}>
         {
           wellPlate.wells.map(
             (w, index) =>
-              <Grid className={classes.gridItem} key={index} item
-                    xs={(12 / wellPlate?.numOfNumberWells) as boolean | 12 | 8 | "auto" | 1 | 2 | 10 | 4 | 3 | 5 | 6 | 7 | 9 | 11 | undefined}>
+              // <Grid className={classes.gridItem} key={index} item
+              //       xs={(12 / wellPlate?.numOfNumberWells) as boolean | 12 | 8 | "auto" | 1 | 2 | 10 | 4 | 3 | 5 | 6 | 7 | 9 | 11 | undefined}>
+
                 <Button onClick={() => {
                   setWell(w)
                 }} disabled={index === currentWellIndex} size={"small"} variant={"outlined"}
-                        className={getClassForButton(index)}>{w.locationString}</Button>
-              </Grid>
+                        className={getClassForButton(index) + " " + classes?.[w.locationString]}>{w.locationString}</Button>
+
+            // </Grid>
           )
         }
-      </Grid>
+      </div>
     </Fragment>
   )
 
@@ -77,7 +116,7 @@ interface WellPlatesSelectProps {
 
 const WellPlatesSelect: FC<WellPlatesSelectProps> = ({wellPlates, name, currentWellPlate, setWellPlate}) => {
   const classes = useWellPlatesSelectStyles()
-  if(wellPlates.length === 0) return null
+  if (wellPlates.length === 0) return null
   const indexOfCurrent = wellPlates.findIndex((plate => plate.name === currentWellPlate?.name))
   const currentValue = (indexOfCurrent !== -1) ? indexOfCurrent : ""
 
@@ -111,7 +150,7 @@ const useWellSelectStyles = makeStyles(theme => ({
 }))
 
 interface WellSelectProps {
-  name:string,
+  name: string,
   availibleLabware: Labware[],
   initialWell?: Well,
   well?: Well,

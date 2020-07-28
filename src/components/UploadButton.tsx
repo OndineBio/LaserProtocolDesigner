@@ -6,6 +6,7 @@ import {Labware, Step} from "../datatypes";
 interface UploadButtonProps {
   setLabware:(labware:Labware[])=> void
   setSteps:(steps:Step[])=> void
+  setMeta:(meta:{name:string,author:string,description:string})=>void
 }
 
 
@@ -21,12 +22,12 @@ class BasicFile {
   }
 }
 
-export const UploadButton: FC<UploadButtonProps> = ({setSteps,setLabware,  children}) => {
+export const UploadButton: FC<UploadButtonProps> = ({setSteps,setLabware,  children,setMeta}) => {
   const parseFile = (file:BasicFile)=>{
     let {name, description, author, steps, labware} = importPythonProtocol({pythonFile:file.content});
-    console.log({name, description, author, steps, labware} )
     setSteps(steps)
     setLabware(labware)
+    setMeta({name, description, author})
   }
 
   const onUpload = async (event:React.ChangeEvent<HTMLInputElement>) => {

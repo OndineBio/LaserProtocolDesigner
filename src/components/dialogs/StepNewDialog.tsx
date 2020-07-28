@@ -10,8 +10,8 @@ import {
   Transfer,
   Laser,
   Aspirate,
-  DisposeTip,
-  PickUpTip, Dispense
+  Dispense,
+  Mix, Plate
 } from "../../datatypes";
 import {FormControl, InputLabel, MenuItem, Select, TextField} from "@material-ui/core";
 import {DialogActions, DialogContent, DialogTitle} from "./shared/DialogStyledComponents";
@@ -32,8 +32,7 @@ interface SelectStepProps {
 
 const SelectStep: FC<SelectStepProps> = ({currentStepType, setCurrentStepType}) => {
   const classes = useSelectStepStyles();
-  const options = [StepType.TRANSFER, StepType.LASER, StepType.ASPIRATE, StepType.DISPENSE, StepType.DISPOSE_TIP,
-    StepType.PICK_UP_TIP]
+  const options = [StepType.TRANSFER, StepType.LASER, StepType.ASPIRATE, StepType.DISPENSE, StepType.MIX, StepType.PLATE]
   return (
     <FormControl className={classes.formControl}>
       <InputLabel id={"select-step-label"}>Select Step Type</InputLabel>
@@ -70,8 +69,10 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
   const [duration, setDuration] = React.useState<number>(0)
   const [location, setLocation] = React.useState<Well | undefined>()
   const [volume, setVolume] = React.useState<number>(0)
-
+  const [times, setTimes] = React.useState<number>(0)
+  const [heightOfAgar, setHeightOfAgar] = React.useState<number>(0)
   const [currentStepType, setCurrentStepType] = React.useState<StepType | undefined>()
+
 
 
   return (
@@ -111,6 +112,18 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
                 e.persist();
                 setVolume(Number(e.target.value))
               }} id="outlined-basic" label="Volume [µL]" variant="outlined" value={(volume === 0) ? "" : volume}/>}
+
+              {stepTypeHas(currentStepType, "times") && <TextField type="number" onChange={(e) => {
+                e.persist();
+                setTimes(Number(e.target.value))
+              }} id="outlined-basic" label="Times to mix" variant="outlined" value={(times === 0) ? "" : times}/>}
+
+              {stepTypeHas(currentStepType, "heightOfAgar") && <TextField type="number" onChange={(e) => {
+                e.persist();
+                setHeightOfAgar(Number(e.target.value))
+              }} id="outlined-basic" label="Height of Agar [mm]" variant="outlined"
+                                                                          value={(heightOfAgar === 0) ? "" : heightOfAgar}/>}
+
               {stepTypeHas(currentStepType, "duration") && <TextField type="number" onChange={(e) => {
                 e.persist();
                 setDuration(Number(e.target.value))
@@ -151,11 +164,15 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
                 step = new Dispense({to, volume})
               }
               break;
-            case StepType.DISPOSE_TIP:
-              step = new DisposeTip()
+            case StepType.MIX:
+              if (from && volume && times) {
+                step = new Mix({from, volume, times})
+              }
               break;
-            case StepType.PICK_UP_TIP:
-              step = new PickUpTip()
+            case StepType.PLATE:
+              if (from && volume && heightOfAgar && to) {
+                step = new Plate({from, to, volume, heightOfAgar})
+              }
               break;
             case StepType.PLACEHOLDER:
               break;

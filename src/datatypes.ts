@@ -1,7 +1,10 @@
+import {Step} from "@material-ui/core";
+
 export enum StepType {
-  TRANSFER = "TRANSFER", LASER = "LASER", ASPIRATE = "ASPIRATE", DISPENSE = "DISPENSE", DISPOSE_TIP = "DISPOSE_TIP",
-  PICK_UP_TIP = "PICK_UP_TIP",
-  PLACEHOLDER = "PLACEHOLDER"
+  TRANSFER = "TRANSFER", LASER = "LASER", ASPIRATE = "ASPIRATE", DISPENSE = "DISPENSE",
+  PLACEHOLDER = "PLACEHOLDER",
+  MIX = "MIX",
+  PLATE = "PLATE",
 }
 
 export function stepTypeHas(type: StepType, attr: string): boolean {
@@ -12,14 +15,14 @@ export function stepTypeHas(type: StepType, attr: string): boolean {
       return ["location", "duration"].includes(attr)
     case StepType.DISPENSE:
       return ["to", "volume"].includes(attr)
-    case StepType.DISPOSE_TIP:
-      return false
-    case StepType.PICK_UP_TIP:
-      return false
     case StepType.PLACEHOLDER:
       return false
     case StepType.ASPIRATE:
       return ["from", "volume"].includes(attr)
+    case StepType.PLATE:
+      return ["from", "to", "heightOfAgar", "volume"].includes(attr)
+    case StepType.MIX:
+      return ["from", "volume", "times"].includes(attr)
   }
   return false
 }
@@ -31,15 +34,37 @@ export function stepTypeHas(type: StepType, attr: string): boolean {
 */
 
 
+export function copyStep(s: Step) {
+  switch (s.type) {
+    case StepType.TRANSFER:
+      return new Transfer({...s as { from: Well, to: Well, volume: number }})
+    case StepType.LASER:
+      return new Laser({...s as { location: Well, duration: number }})
+    case StepType.ASPIRATE:
+      return new Aspirate({...s as { from: Well, volume: number }})
+    case StepType.DISPENSE:
+      return new Dispense({...s as { to: Well, volume: number }})
+    case StepType.PLACEHOLDER:
+      return new PlaceHolderStep()
+    case StepType.MIX:
+      return new Mix({...s as { from: Well, volume: number, times: number }})
+    case StepType.PLATE:
+      return new Plate({...s as { from: Well, to: Well, volume: number, heightOfAgar: number }})
+
+  }
+}
+
 export interface Step {
   id: string
   type: StepType
-  getPythonString: () => string
+  getPythonString: (stepsBefore: Step[]) => string
   from?: Well
   to?: Well
   duration?: number
   location?: Well
+  heightOfAgar?: number
   volume?: number
+  times?: number
 }
 
 export class PlaceHolderStep implements Step {
@@ -58,6 +83,10 @@ export class Transfer implements Step {
 
   [k: string]: any;
 
+  from: Well
+  to: Well
+  volume: number
+
   type = StepType.TRANSFER;
 
   constructor({from, to, volume}: { from: Well, to: Well, volume: number }) {
@@ -69,8 +98,8 @@ export class Transfer implements Step {
 
   getPythonString(): string {
     return `
-# Transfer;${JSON.stringify(this)}
-pipette.transfer(${this.volume}, ${this.to}, ${this.from})`;
+# ${this.type};${JSON.stringify(this)}
+pipette.transfer(${this.volume}, ${this.to.pythonString()}, ${this.from.pythonString()})`;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`
@@ -87,8 +116,8 @@ pipette.transfer(${this.volume}, ${this.to}, ${this.from})`;
 export class Laser implements Step {
   [k: string]: any;
 
+  location: Well;
   type = StepType.LASER;
-
 
   constructor({location, duration}: { location: Well, duration: number }) {
 
@@ -96,10 +125,11 @@ export class Laser implements Step {
     this.location = location;
   }
 
-  getPythonString(): string {
+  getPythonString(stepsBefore: Step[]): string {
+    this.location.heightOfLiquidInWellFromBottomOfWell(stepsBefore)
     return `
-# Laser;${JSON.stringify(this)}
-laserController.move_to_well(well=${this.location.pythonString()})
+# ${this.type};${JSON.stringify(this)}
+laserController.move_to_well(well=${this.location.pythonString()}, height_of_liquid=${this.location.heightOfLiquidInWellFromBottomOfWell(stepsBefore)})
 laserController.turn_on_laser(seconds_to_off=${this.duration})
     `;
   }
@@ -129,7 +159,8 @@ export class Aspirate implements Step {
 
   getPythonString(): string {
     return `
-# Aspirate;${JSON.stringify(this)}
+# ${this.type};${JSON.stringify(this)}
+pipette.pick_up_tip()
 pipette.aspirate(${this.volume}, ${this.from.pythonString()})`;
   }
 
@@ -153,8 +184,9 @@ export class Dispense implements Step {
 
   getPythonString(): string {
     return `
-# Dispense; ${JSON.stringify(this)}
-pipette.dispense(${this.volume}, ${this.to.pythonString()})`;
+# ${this.type}; ${JSON.stringify(this)}
+pipette.dispense(${this.volume}, ${this.to.pythonString()})
+pipette.drop_tip()`;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`
@@ -168,39 +200,68 @@ pipette.dispense(${this.volume}, ${this.to.pythonString()})`;
 
 }
 
-export class DisposeTip implements Step {
+export class Mix implements Step {
   [k: string]: any;
 
-  type = StepType.DISPOSE_TIP;
+  type = StepType.MIX;
+
+  constructor({from, volume, times}: { from: Well, volume: number, times: number }) {
+    this.from = from;
+    this.times = times;
+    this.volume = volume;
+  }
 
   getPythonString(): string {
-    return "# DisposeTip;\n" +
-      "pipette.drop_tip()";
+    return `
+# ${this.type}; ${JSON.stringify(this)}
+pipette.mix(${this.times}, ${this.volume}, ${this.from.pythonString()})`;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`
 
   static fromImportComment(comment: string): Step {
-    return new DisposeTip();
+    const [, json] = comment.split(";")
+    const {from, volume, times} = JSON.parse(json) as { from: JSONWell, volume: number, times: number }
+    return new Mix({from: fromJSONWelltoWell(from), volume, times})
   }
+
 
 }
 
-export class PickUpTip implements Step {
+export class Plate implements Step {
   [k: string]: any;
 
-  type = StepType.PICK_UP_TIP;
+  heightOfAgar: number
+  volume: number
+  from: Well
+  to: Well
+  type = StepType.PLATE;
+
+  constructor({from, volume, to, heightOfAgar}: { from: Well, to: Well, volume: number, heightOfAgar: number }) {
+    this.heightOfAgar = heightOfAgar;
+    this.from = from;
+    this.to = to;
+    this.volume = volume;
+  }
 
   getPythonString(): string {
-    return "# PickUpTip;\n" +
-      "pipette.pick_up_tip()";
+    return `
+# ${this.type}; ${JSON.stringify(this)}
+pipette.pick_up_tip()
+pipette.dispense(${this.volume}, ${this.from.pythonString()}))\`;
+pipette.dispense(${this.volume}, ${this.to.pythonString()}.bottom(${this.heightOfAgar}))
+pipette.drop_tip()
+`;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`
 
   static fromImportComment(comment: string): Step {
-    return new PickUpTip();
+    const [, json] = comment.split(";")
+    const {from, volume, heightOfAgar, to} = JSON.parse(json) as { to: JSONWell, from: JSONWell, volume: number, heightOfAgar: number }
+    return new Plate({from: fromJSONWelltoWell(from), to: fromJSONWelltoWell(to), volume, heightOfAgar})
   }
+
 
 }
 
@@ -253,6 +314,8 @@ export interface WellPlate extends Labware {
   numOfNumberWells: number;
   numOfLetterWells: number;
   isWellPlate: true;
+  readonly wellHeight: number //from opentrons labware definitions
+  readonly wellDiameter: number //from opentrons labware definitions
 }
 
 export function instanceOfWellPlate(object: any): object is WellPlate {
@@ -268,6 +331,21 @@ interface JSONWell {
 
 const fromJSONWelltoWell: (jw: JSONWell) => Well = (jw): Well => {
   switch (jw.wellPlateType) {
+    case LabwareType.WellPlate6:
+      const wp1 = new WellPlate6(jw.slot)
+      return wp1.wells.find(v => v.locationString === jw.locationString) as Well
+    case LabwareType.WellPlate12:
+      const wp2 = new WellPlate12(jw.slot)
+      return wp2.wells.find(v => v.locationString === jw.locationString) as Well
+    case LabwareType.WellPlate24:
+      const wp3 = new WellPlate24(jw.slot)
+      return wp3.wells.find(v => v.locationString === jw.locationString) as Well
+    case LabwareType.WellPlate48:
+      const wp4 = new WellPlate48(jw.slot)
+      return wp4.wells.find(v => v.locationString === jw.locationString) as Well
+    case LabwareType.Reservoir12:
+      const wp5 = new Reservoir12(jw.slot)
+      return wp5.wells.find(v => v.locationString === jw.locationString) as Well
     case LabwareType.WellPlate96:
       const wp = new WellPlate96(jw.slot)
       return wp.wells.find(v => v.locationString === jw.locationString) as Well
@@ -301,9 +379,31 @@ export class Well {
     return `${this.wellPlate.name}["${this.locationString}"]`
   }
 
+  heightOfLiquidInWellFromBottomOfWell(steps: Step[]): number {
+    // returns the height of the liquid in a well for calculating the distance offset for the laser
+    // returns the height of the total well if there is no liquid
+    let currentVolume = 0;
+    for (let step of steps) {
+      if (
+        step?.to?.wellPlate.name === this.wellPlate.name &&
+        step?.to?.locationString === this.locationString
+      ) {
+        currentVolume += step?.volume ?? 0;
+      } else if (step?.from?.wellPlate.name === this.wellPlate.name &&
+        step?.from?.locationString === this.locationString) {
+        currentVolume -= step?.volume ?? 0;
+      }
+    }
+    if (currentVolume === 0) return this.wellPlate.wellHeight
+    const height = currentVolume / (Math.PI * (this.wellPlate.wellDiameter / 2) * (this.wellPlate.wellDiameter / 2))
+    return Math.round(height * 1e2) / 1e2 // round to 2 decimal places
+  }
+
 }
 
 export class WellPlateN implements WellPlate {
+  readonly wellHeight: number //from opentrons labware definitions
+  readonly wellDiameter: number //from opentrons labware definitions
   readonly type: LabwareType
   readonly name: string; // an unique name
   readonly wells: Well[]; // the wells in this plate
@@ -313,19 +413,27 @@ export class WellPlateN implements WellPlate {
   private readonly loadLabwareString: string;
   readonly isWellPlate: true = true;
 
-  constructor({numberOfWells, type, slot, numOfLetterWells, numOfNumberWells, loadLabwareString}: { numOfNumberWells: number, numOfLetterWells: number, numberOfWells: number, type: LabwareType, slot: number, loadLabwareString: string }) {
+  constructor({
+                wellDiameter, wellHeight,
+                numberOfWells, type, slot, numOfLetterWells, numOfNumberWells, loadLabwareString
+              }: {
+    wellHeight: number, wellDiameter: number, numOfNumberWells: number, numOfLetterWells: number,
+    numberOfWells: number, type: LabwareType, slot: number, loadLabwareString: string
+  }) {
     this.type = type
     this.wells = []
+    this.wellHeight = wellHeight;
+    this.wellDiameter = wellDiameter
     this.numOfLetterWells = numOfLetterWells;
     this.numOfNumberWells = numOfNumberWells
     this.loadLabwareString = loadLabwareString
     this.slot = slot
     this.name = "the_" + numberOfWells + "_well_plate_in_" + slot
     const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"];
-    const usedLetters = letters.slice(0, numOfLetterWells - 1)
+    const usedLetters = letters.slice(0, numOfLetterWells)
     usedLetters.forEach(val => {
-      for (let i = 1; i <= numOfNumberWells; i++) {
-        this.wells.push(new Well(this, val + i))
+      for (let i = 0; i < numOfNumberWells; i++) {
+        this.wells.push(new Well(this, val + (i + 1)))
       }
     })
   }
@@ -335,14 +443,13 @@ export class WellPlateN implements WellPlate {
 # ${this.type};${JSON.stringify({slot: this.slot})}
 ${this.name} = protocol.load_labware('${this.loadLabwareString}', ${this.slot})`;
   }
-
-
 }
-
 
 export class WellPlate6 extends WellPlateN {
   constructor(slot: number) {
     super({
+      wellHeight: 17.40,
+      wellDiameter: 35.43,
       numberOfWells: 6,
       type: LabwareType.WellPlate6,
       numOfLetterWells: 2,
@@ -362,6 +469,8 @@ export class WellPlate6 extends WellPlateN {
 export class WellPlate12 extends WellPlateN {
   constructor(slot: number) {
     super({
+      wellHeight: 17.53,
+      wellDiameter: 22.73,
       numberOfWells: 12,
       type: LabwareType.WellPlate12,
       numOfLetterWells: 3,
@@ -381,6 +490,8 @@ export class WellPlate12 extends WellPlateN {
 export class WellPlate24 extends WellPlateN {
   constructor(slot: number) {
     super({
+      wellHeight: 17.40,
+      wellDiameter: 16.26,
       numberOfWells: 24,
       type: LabwareType.WellPlate24,
       numOfLetterWells: 4,
@@ -400,6 +511,8 @@ export class WellPlate24 extends WellPlateN {
 export class WellPlate48 extends WellPlateN {
   constructor(slot: number) {
     super({
+      wellHeight: 17.40,
+      wellDiameter: 11.56,
       numberOfWells: 48,
       type: LabwareType.WellPlate48,
       numOfLetterWells: 6,
@@ -419,10 +532,12 @@ export class WellPlate48 extends WellPlateN {
 export class WellPlate96 extends WellPlateN {
   constructor(slot: number) {
     super({
-      numberOfWells: 48,
+      wellHeight: 10.67,
+      wellDiameter: 6.86,
+      numberOfWells: 96,
       type: LabwareType.WellPlate96,
-      numOfLetterWells: 12,
-      numOfNumberWells: 8,
+      numOfLetterWells: 8,
+      numOfNumberWells: 12,
       loadLabwareString: "corning_96_wellplate_360ul_flat",
       slot
     });
@@ -460,6 +575,14 @@ ${this.name} = protocol.load_labware('usascientific_12_reservoir_22ml', ${this.s
     const [, json] = comment.split(";")
     const {slot} = JSON.parse(json) as { slot: number }
     return new Reservoir12(slot)
+  }
+
+  get wellDiameter(): number {
+    throw new Error("Accessing Reservoir12 well size!!!")
+  }
+
+  get wellHeight(): number {
+    throw new Error("Accessing Reservoir12 well size!!!")
   }
 
 }

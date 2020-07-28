@@ -1,12 +1,10 @@
 import {
   Aspirate,
   Dispense,
-  DisposeTip,
   instanceOfWellPlate,
-  Labware,
-  Laser, OpentronsTipRack,
-  PickUpTip,
-  Step,
+  Labware, LabwareType,
+  Laser, Mix, OpentronsTipRack, Plate, Reservoir12,
+  Step, StepType,
   Transfer, WellPlate12, WellPlate24, WellPlate48, WellPlate6, WellPlate96
 } from "./datatypes";
 
@@ -19,9 +17,8 @@ export interface BuildPythonProtocolOptions {
 }
 
 export function buildPythonProtocolForExport({name, author, description, labware, steps}: BuildPythonProtocolOptions) {
-  console.log({name, author, description, labware, steps})
   const labwareString = labware.map(val => val.getPythonInit()).join("\n")
-  const stepString = steps.map(val => val.getPythonString()).join("\n\n")
+  const stepString = steps.map((val, index, array) => val.getPythonString(array.slice(0, index))).join("\n\n")
   const tipRacksString = labware
     .filter(val => !instanceOfWellPlate(val))
     .map(val => val.name).join(", ")
@@ -52,51 +49,53 @@ ${stepString}
 }
 
 export function importPythonProtocol({pythonFile}: { pythonFile: string }): BuildPythonProtocolOptions {
-  const labware:Labware[] = []
-  const steps:Step[] = []
+  const labware: Labware[] = []
+  const steps: Step[] = []
   let meta: string[] = []
   pythonFile.split("\n")
     .filter(val => val[0] === "#")
     .forEach((comment) => {
       comment = comment.replace("#", "")
-      console.log(comment)
       let [className] = comment.split(";")
       className = className.trim()
       switch (className) {
-        case "Transfer":
+        case StepType.TRANSFER:
           steps.push(Transfer.fromImportComment(comment))
           break;
-        case "Laser":
+        case StepType.LASER:
           steps.push(Laser.fromImportComment(comment))
           break;
-        case "Aspirate":
+        case StepType.ASPIRATE:
           steps.push(Aspirate.fromImportComment(comment))
           break;
-        case "Dispense":
+        case StepType.DISPENSE:
           steps.push(Dispense.fromImportComment(comment))
           break;
-        case "DisposeTip":
-          steps.push(DisposeTip.fromImportComment(comment))
+        case StepType.MIX:
+          steps.push(Mix.fromImportComment(comment))
           break;
-        case "PickUpTip":
-          steps.push(PickUpTip.fromImportComment(comment))
+        case StepType.PLATE:
+          steps.push(Plate.fromImportComment(comment))
           break;
-        case "OpentronsTipRack":
+        case LabwareType.OpentronsTipRack:
           labware.push(OpentronsTipRack.fromImportComment(comment))
           break;
-        case "WellPlate96":
+        case LabwareType.Reservoir12:
+          labware.push(Reservoir12.fromImportComment(comment))
+          break;
+        case LabwareType.WellPlate96:
           labware.push(WellPlate96.fromImportComment(comment))
           break;
-        case "WellPlate6":
+        case LabwareType.WellPlate6:
           labware.push(WellPlate6.fromImportComment(comment))
           break;
-        case "WellPlate12":
+        case LabwareType.WellPlate12:
           labware.push(WellPlate12.fromImportComment(comment))
           break;
-        case "WellPlate24":
+        case LabwareType.WellPlate24:
           labware.push(WellPlate24.fromImportComment(comment))
           break;
-        case "WellPlate48":
+        case LabwareType.WellPlate48:
           labware.push(WellPlate48.fromImportComment(comment))
           break;
         case "meta":

@@ -7,7 +7,6 @@ import {DialogActions, DialogContent, DialogTitle} from "./shared/DialogStyledCo
 import {WellSelect} from "./shared/WellSelect";
 
 
-
 interface StepDialogProps {
   availibleLabware: Labware[],
   initialStep: Step
@@ -15,7 +14,6 @@ interface StepDialogProps {
   handleSave: (step: Step) => void
   open: boolean
 }
-
 
 
 export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, handleSave, open, availibleLabware}) => {
@@ -26,6 +24,8 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
     setDuration(initialStep?.duration ?? 0)
     setLocation(initialStep?.location)
     setVolume(initialStep?.volume ?? 0)
+    setTimes(initialStep?.times ?? 0)
+    setHeightOfAgar(initialStep?.heightOfAgar ??0)
 
   }, [initialStep]);
 
@@ -35,6 +35,8 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
   const [duration, setDuration] = React.useState<number>(initialStep?.duration ?? 0)
   const [location, setLocation] = React.useState<Well | undefined>(initialStep?.location)
   const [volume, setVolume] = React.useState<number>(initialStep?.volume ?? 0)
+  const [times, setTimes] = React.useState<number>(initialStep?.times ?? 0)
+  const [heightOfAgar, setHeightOfAgar] = React.useState<number>(initialStep?.heightOfAgar ?? 0)
 
   return (
     <Dialog maxWidth={"md"} onClose={handleClose} aria-labelledby="customized-dialog-title" open={open}>
@@ -49,7 +51,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
                     }}
                     well={from}
                     hide={initialStep?.from === undefined}
-         name={"From"}/>
+                    name={"From"}/>
         <WellSelect availibleLabware={availibleLabware}
                     initialWell={initialStep?.to}
                     setWell={(w) => {
@@ -57,7 +59,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
                     }}
                     well={to}
                     hide={initialStep?.to === undefined}
-         name={"Into"}/>
+                    name={"Into"}/>
 
         <WellSelect availibleLabware={availibleLabware}
                     initialWell={initialStep?.location}
@@ -71,12 +73,23 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
         {initialStep?.volume && <TextField type="number" onChange={(e) => {
           e.persist();
           setVolume(Number(e.target.value))
-        }} id="outlined-basic" label="Volume [µL]" variant="outlined" value={(volume === 0)?"":volume}/>}
+        }} id="outlined-basic" label="Volume [µL]" variant="outlined" value={(volume === 0) ? "" : volume}/>}
+
+        {initialStep?.times && <TextField type="number" onChange={(e) => {
+          e.persist();
+          setTimes(Number(e.target.value))
+        }} id="outlined-basic" label="Times to mix" variant="outlined" value={(times === 0) ? "" : times}/>}
+
+        {initialStep?.heightOfAgar && <TextField type="number" onChange={(e) => {
+          e.persist();
+          setHeightOfAgar(Number(e.target.value))
+        }} id="outlined-basic" label="Height of Agar [mm]" variant="outlined"
+                                                                    value={(heightOfAgar === 0) ? "" : heightOfAgar}/>}
+
         {initialStep?.duration && <TextField type="number" onChange={(e) => {
           e.persist();
           setDuration(Number(e.target.value))
-        }} id="outlined-basic" label="Duration [sec]" variant="outlined" value={(duration === 0)?"":duration}/>}
-
+        }} id="outlined-basic" label="Duration [sec]" variant="outlined" value={(duration === 0) ? "" : duration}/>}
 
 
       </DialogContent>
@@ -100,7 +113,11 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
           if (initialStep?.duration) {
             initialStep.duration = duration
           }
-          handleSave(initialStep);
+          if (initialStep?.times) {
+            initialStep.times = times
+          }
+          if (initialStep)
+            handleSave(initialStep);
           handleClose()
         }} color="primary">
           Save changes
