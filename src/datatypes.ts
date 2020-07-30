@@ -254,7 +254,7 @@ export class Plate implements Step {
     return `
 
 # ${this.type};${JSON.stringify(this)}
-pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}.bottom(${this.heightOfAgar}), ${last?.type === StepType.MIX ? `mix_before=(${last.times}, ${last.volume}), ` : ""}touch_tip=True, new_tip='always')`;
+pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}.bottom(${this.heightOfAgar}), ${last?.type === StepType.MIX ? `mix_before=(${last.times}, ${last.volume}), ` : ""} new_tip='always')`;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`

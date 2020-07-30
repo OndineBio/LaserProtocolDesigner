@@ -116,6 +116,9 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
           if (initialStep?.times) {
             initialStep.times = times
           }
+          if (initialStep?.heightOfAgar) {
+            initialStep.heightOfAgar = heightOfAgar
+          }
           if (initialStep)
             handleSave(initialStep);
           handleClose()
