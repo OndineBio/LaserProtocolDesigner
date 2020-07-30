@@ -17,12 +17,15 @@ export interface BuildPythonProtocolOptions {
 }
 
 export function buildPythonProtocolForExport({name, author, description, labware, steps}: BuildPythonProtocolOptions) {
-  const labwareString = labware.map(val => val.getPythonInit()).join("\n")
-  const stepString = steps.map((val, index, array) => val.getPythonString(array.slice(0, index))).join("\n\n")
+  const labwareString = labware.map(val => val.getPythonInit()).join("\n").replace(/\n/g, "\n    ")
+  const stepString = steps.map((val, index, array) => val.getPythonString(array.slice(0, index), array.slice(index+1)))
+    .map(v => {console.log(v); return v})
+    .join("\n\n")
+    .replace(/\n/g, "\n    ")
   const tipRacksString = labware
     .filter(val => !instanceOfWellPlate(val))
     .map(val => val.name).join(", ")
-
+  console.log({labwareString, stepString, tipRacksString})
   return `
 from opentrons import protocol_api
 from ondine_laser_control import laser
@@ -35,15 +38,15 @@ metadata = {
     'description': '${description}',
     'apiLevel': '2.5'
 }
+def run(protocol: protocol_api.ProtocolContext):
+    ${labwareString}
 
-${labwareString}
+    pipette = protocol.load_instrument('p300_single_gen2', 'right', tip_racks=[${tipRacksString}])
+  
+    laserController = laser.Controller(protocol=protocol)
 
-pipette = protocol.load_instrument('p300_single_gen2', 'right', tip_racks=[${tipRacksString}])
-
-laserController = laser.Controller(protocol=protocol)
-
-${stepString}
-
+    ${stepString}
+    #end
 `
 
 }
@@ -52,7 +55,7 @@ export function importPythonProtocol({pythonFile}: { pythonFile: string }): Buil
   const labware: Labware[] = []
   const steps: Step[] = []
   let meta: string[] = []
-  pythonFile.split("\n")
+  pythonFile.split("\n").map(s => s.trim())
     .filter(val => val[0] === "#")
     .forEach((comment) => {
       comment = comment.replace("#", "")

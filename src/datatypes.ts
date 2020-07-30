@@ -57,7 +57,7 @@ export function copyStep(s: Step) {
 export interface Step {
   id: string
   type: StepType
-  getPythonString: (stepsBefore: Step[]) => string
+  getPythonString: (stepsBefore: Step[], stepsNext: Step[]) => string
   from?: Well
   to?: Well
   duration?: number
@@ -96,10 +96,13 @@ export class Transfer implements Step {
     this.volume = volume;
   }
 
-  getPythonString(): string {
+  getPythonString(prev: Step[]): string {
+    const [last] = prev.slice(-1)
     return `
+
 # ${this.type};${JSON.stringify(this)}
-pipette.transfer(${this.volume}, ${this.to.pythonString()}, ${this.from.pythonString()})`;
+
+pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}, ${last?.type === StepType.MIX ? `mix_before=(${last.times}, ${last.volume}), ` : ""}touch_tip=True, new_tip='always')`;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`
@@ -157,10 +160,11 @@ export class Aspirate implements Step {
 
   id: string = `${Math.floor(Math.random() * 1e6)}`
 
-  getPythonString(): string {
+  getPythonString(prev: Step[]): string {
+    const [last] = prev.slice(-1)
     return `
 # ${this.type};${JSON.stringify(this)}
-pipette.pick_up_tip()
+${last?.type !== StepType.MIX ? "pipette.pick_up_tip()" : ""}
 pipette.aspirate(${this.volume}, ${this.from.pythonString()})`;
   }
 
@@ -211,9 +215,11 @@ export class Mix implements Step {
     this.volume = volume;
   }
 
-  getPythonString(): string {
+  getPythonString(_: Step[], next: Step[]): string {
+    if (next?.[0].type === StepType.TRANSFER || next?.[0].type === StepType.PLATE) return `# ${this.type}; ${JSON.stringify(this)}`
     return `
 # ${this.type}; ${JSON.stringify(this)}
+pipette.pick_up_tip()
 pipette.mix(${this.times}, ${this.volume}, ${this.from.pythonString()})`;
   }
 
@@ -243,15 +249,12 @@ export class Plate implements Step {
     this.to = to;
     this.volume = volume;
   }
-
-  getPythonString(): string {
+  getPythonString(prev: Step[]): string {
+    const [last] = prev.slice(-1)
     return `
-# ${this.type}; ${JSON.stringify(this)}
-pipette.pick_up_tip()
-pipette.dispense(${this.volume}, ${this.from.pythonString()}))\`;
-pipette.dispense(${this.volume}, ${this.to.pythonString()}.bottom(${this.heightOfAgar}))
-pipette.drop_tip()
-`;
+
+# ${this.type};${JSON.stringify(this)}
+pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}.bottom(${this.heightOfAgar}), ${last?.type === StepType.MIX ? `mix_before=(${last.times}, ${last.volume}), ` : ""}touch_tip=True, new_tip='always')`;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`
@@ -568,7 +571,7 @@ ${this.name} = protocol.load_labware('usascientific_12_reservoir_22ml', ${this.s
   constructor(slot: number) {
     this.name = "the_12_well_reservoir_in_slot_" + slot
     this.slot = slot;
-    this.wells = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(v => new Well(this, "" + v))
+    this.wells = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(v => new Well(this, "A" + v))
   }
 
   static fromImportComment(comment: string): Labware {
