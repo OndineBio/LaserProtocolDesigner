@@ -96,13 +96,24 @@ export class Transfer implements Step {
     this.volume = volume;
   }
 
-  getPythonString(prev: Step[]): string {
+  getPythonString(prev: Step[], nextList: Step[]): string {
     const [last] = prev.slice(-1)
+    const next = nextList?.[0]
+
+    let mixString = ""
+
+    if (last?.type === StepType.MIX && last?.from?.pythonString() === this.from.pythonString()) {
+      mixString += `mix_before=(${last.times}, ${last.volume}), `
+    }
+    if (next?.type === StepType.MIX && next?.from?.pythonString() === this.to.pythonString()) {
+      mixString += `mix_after=(${next.times}, ${next.volume}), `
+    }
+
     return `
 
 # ${this.type};${JSON.stringify(this)}
 
-pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}, ${last?.type === StepType.MIX ? `mix_before=(${last.times}, ${last.volume}), ` : ""}touch_tip=True, new_tip='always')`;
+pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}, ${mixString}touch_tip=True, new_tip='always')`;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`
@@ -208,6 +219,7 @@ export class Mix implements Step {
   [k: string]: any;
 
   type = StepType.MIX;
+  from: Well;
 
   constructor({from, volume, times}: { from: Well, volume: number, times: number }) {
     this.from = from;
@@ -215,8 +227,20 @@ export class Mix implements Step {
     this.volume = volume;
   }
 
-  getPythonString(_: Step[], next: Step[]): string {
-    if (next?.[0].type === StepType.TRANSFER || next?.[0].type === StepType.PLATE) return `# ${this.type}; ${JSON.stringify(this)}`
+  getPythonString(prev: Step[], next: Step[]): string {
+    if (
+      (
+        (next?.[0]?.type === StepType.TRANSFER || next?.[0]?.type === StepType.PLATE)
+        &&
+        next?.[0]?.from?.pythonString() === this.from.pythonString()
+      )
+      ||
+      (
+        (prev?.[0]?.type === StepType.TRANSFER || prev?.[0]?.type === StepType.PLATE)
+        &&
+        prev?.[0]?.to?.pythonString() === this.from.pythonString()
+      )
+    ) return `# ${this.type}; ${JSON.stringify(this)}`
     return `
 # ${this.type}; ${JSON.stringify(this)}
 pipette.pick_up_tip()
@@ -249,12 +273,25 @@ export class Plate implements Step {
     this.to = to;
     this.volume = volume;
   }
-  getPythonString(prev: Step[]): string {
+
+  getPythonString(prev: Step[], nextList: Step[]): string {
     const [last] = prev.slice(-1)
+    const next = nextList?.[0]
+
+    let mixString = ""
+
+    if (last?.type === StepType.MIX && last?.from?.pythonString() === this.from.pythonString()) {
+      mixString += `mix_before=(${last.times}, ${last.volume}), `
+    }
+    if (next?.type === StepType.MIX && next?.from?.pythonString() === this.to.pythonString()) {
+      mixString += `mix_after=(${next.times}, ${next.volume}), `
+    }
+
+
     return `
 
 # ${this.type};${JSON.stringify(this)}
-pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}.bottom(${this.heightOfAgar}), ${last?.type === StepType.MIX ? `mix_before=(${last.times}, ${last.volume}), ` : ""} new_tip='always')`;
+pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}.bottom(${this.heightOfAgar}), ${mixString} new_tip='always')`;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`
