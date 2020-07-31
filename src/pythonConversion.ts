@@ -5,7 +5,7 @@ import {
   Labware, LabwareType,
   Laser, Mix, OpentronsTipRack, Plate, Reservoir12,
   Step, StepType,
-  Transfer, WellPlate12, WellPlate24, WellPlate48, WellPlate6, WellPlate96
+  Transfer, Wait, WellPlate12, WellPlate24, WellPlate48, WellPlate6, WellPlate96
 } from "./datatypes";
 
 export interface BuildPythonProtocolOptions {
@@ -29,6 +29,7 @@ export function buildPythonProtocolForExport({name, author, description, labware
   return `
 from opentrons import protocol_api
 from ondine_laser_control import laser
+import time
 
 # meta;${name}:${author}:${description}
 
@@ -79,6 +80,9 @@ export function importPythonProtocol({pythonFile}: { pythonFile: string }): Buil
           break;
         case StepType.PLATE:
           steps.push(Plate.fromImportComment(comment))
+          break;
+        case StepType.WAIT:
+          steps.push(Wait.fromImportComment(comment))
           break;
         case LabwareType.OpentronsTipRack:
           labware.push(OpentronsTipRack.fromImportComment(comment))
