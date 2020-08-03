@@ -11,7 +11,7 @@ import {
   Laser,
   Aspirate,
   Dispense,
-  Mix, Plate
+  Mix, Plate, Wait
 } from "../../datatypes";
 import {FormControl, InputLabel, MenuItem, Select, TextField} from "@material-ui/core";
 import {DialogActions, DialogContent, DialogTitle} from "./shared/DialogStyledComponents";
@@ -32,7 +32,7 @@ interface SelectStepProps {
 
 const SelectStep: FC<SelectStepProps> = ({currentStepType, setCurrentStepType}) => {
   const classes = useSelectStepStyles();
-  const options = [StepType.TRANSFER, StepType.LASER, StepType.ASPIRATE, StepType.DISPENSE, StepType.MIX, StepType.PLATE]
+  const options = [StepType.TRANSFER, StepType.LASER, StepType.ASPIRATE, StepType.DISPENSE, StepType.MIX, StepType.PLATE, StepType.WAIT]
   return (
     <FormControl className={classes.formControl}>
       <InputLabel id={"select-step-label"}>Select Step Type</InputLabel>
@@ -172,6 +172,11 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
             case StepType.PLATE:
               if (from && volume && heightOfAgar && to) {
                 step = new Plate({from, to, volume, heightOfAgar})
+              }
+              break;
+            case StepType.WAIT:
+              if (duration) {
+                step = new Wait({duration})
               }
               break;
             case StepType.PLACEHOLDER:
