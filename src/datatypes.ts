@@ -3,7 +3,7 @@ import {Step} from "@material-ui/core";
 export enum StepType {
   TRANSFER = "TRANSFER", LASER = "LASER", ASPIRATE = "ASPIRATE", DISPENSE = "DISPENSE",
   PLACEHOLDER = "PLACEHOLDER",
-  MIX = "MIX",
+  MIX = "MIX", WAIT = "WAIT",
   PLATE = "PLATE",
 }
 
@@ -23,6 +23,8 @@ export function stepTypeHas(type: StepType, attr: string): boolean {
       return ["from", "to", "heightOfAgar", "volume"].includes(attr)
     case StepType.MIX:
       return ["from", "volume", "times"].includes(attr)
+    case StepType.WAIT:
+      return ["duration"].includes(attr)
   }
   return false
 }
@@ -50,7 +52,8 @@ export function copyStep(s: Step) {
       return new Mix({...s as { from: Well, volume: number, times: number }})
     case StepType.PLATE:
       return new Plate({...s as { from: Well, to: Well, volume: number, heightOfAgar: number }})
-
+    case StepType.WAIT:
+      return new Wait({...s as { duration: number }})
   }
 }
 
@@ -303,6 +306,33 @@ pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonSt
   }
 
 
+}
+
+export class Wait implements Step {
+  [k: string]: any;
+
+  type = StepType.WAIT;
+
+  constructor({ duration}: { duration: number }) {
+
+    this.duration = duration;
+  }
+
+  getPythonString(stepsBefore: Step[]): string {
+    return `
+# ${this.type};${JSON.stringify(this)}
+time.sleep(${this.duration})
+    `;
+  }
+
+  id: string = `${Math.floor(Math.random() * 1e6)}`
+
+  static fromImportComment(comment: string): Step {
+    const [, json] = comment.split(";")
+    const {duration} = JSON.parse(json) as {duration: number }
+
+    return new Wait({duration})
+  }
 }
 
 export enum LabwareType {
