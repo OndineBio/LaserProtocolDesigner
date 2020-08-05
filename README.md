@@ -18,6 +18,6 @@ Make tip racks a required component
 
 Add spinner when uploading a protocol
 
-Add wait step
+~~Add wait step~~
 
 ~~MAKE SURE THAT TRANSFER CHECK IF MIXING THE RIGHT THING~~
