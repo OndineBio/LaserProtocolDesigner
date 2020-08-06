@@ -1,0 +1,19 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="256" cy="256" r="256" fill="#42A4FF"/>
+<rect x="16" y="247" width="308" height="19" fill="#DF0000"/>
+<rect x="361" y="140" width="19" height="70" fill="#DF0000"/>
+<rect x="361" y="303" width="19" height="70" fill="#DF0000"/>
+<rect x="282" y="179.435" width="19" height="70" transform="rotate(-45 282 179.435)" fill="#DF0000"/>
+<rect x="396" y="296.435" width="19" height="70" transform="rotate(-45 396 296.435)" fill="#DF0000"/>
+<rect x="445.497" y="166" width="19" height="70" transform="rotate(45 445.497 166)" fill="#DF0000"/>
+<rect x="331.497" y="283" width="19" height="70" transform="rotate(45 331.497 283)" fill="#DF0000"/>
+<circle cx="371" cy="256" r="38" fill="#DF0000"/>
+<rect x="417" y="247" width="70" height="19" fill="#DF0000"/>
+<rect x="156" y="133" width="10" height="150" fill="#E1E0E0"/>
+<rect x="156" y="282.736" width="10" height="109.432" transform="rotate(-10 156 282.736)" fill="#E1E0E0"/>
+<rect x="195" y="281" width="10.1954" height="109.42" transform="rotate(10 195 281)" fill="#E1E0E0"/>
+<rect x="195" y="133" width="10" height="150" fill="#E1E0E0"/>
+<ellipse cx="180.5" cy="133.5" rx="24.5" ry="12.5" fill="#E1E0E0"/>
+<ellipse cx="180" cy="133.5" rx="15" ry="6.5" fill="#42A4FF"/>
+<ellipse cx="180.5" cy="390.5" rx="5.5" ry="1.5" fill="#E1E0E0"/>
+</svg>
