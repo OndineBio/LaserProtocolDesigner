@@ -55,13 +55,13 @@ const SelectStep: FC<SelectStepProps> = ({currentStepType, setCurrentStepType}) 
 
 
 interface StepNewDialogProps {
-  availibleLabware: Labware[],
+  availableLabware: Labware[],
   handleClose: () => void
   handleSave: (step: Step) => void
   open: boolean
 }
 
-export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, open, availibleLabware}) => {
+export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, open, availableLabware}) => {
 
 
   const [from, setFrom] = React.useState<Well | undefined>()
@@ -87,21 +87,21 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
         {
           currentStepType && (
             <Fragment>
-              <WellSelect availibleLabware={availibleLabware}
+              <WellSelect availableLabware={availableLabware}
                           setWell={(w) => {
                             setFrom(w)
                           }}
                           well={from}
                           hide={!stepTypeHas(currentStepType, "from")}
                           name={"From"}/>
-              <WellSelect availibleLabware={availibleLabware}
+              <WellSelect availableLabware={availableLabware}
                           setWell={(w) => {
                             setTo(w)
                           }}
                           well={to}
                           hide={!stepTypeHas(currentStepType, "to")} name={"Into"}/>
               <WellSelect name={"Location"}
-                          availibleLabware={availibleLabware}
+                          availableLabware={availableLabware}
                           setWell={(w) => {
                             setLocation(w)
                           }}

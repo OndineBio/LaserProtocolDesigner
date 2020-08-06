@@ -1,4 +1,4 @@
-import {instanceOfWellPlate, Labware, Well, WellPlate} from "../../../datatypes";
+import {instanceOfWellPlate, Labware, OpentronsTipRack, Well, WellPlate} from "../../../datatypes";
 import React, {FC, Fragment, useEffect} from "react";
 import {makeStyles} from "@material-ui/core/styles";
 import {FormControl, InputLabel, MenuItem, Select, Typography} from "@material-ui/core";
@@ -151,14 +151,14 @@ const useWellSelectStyles = makeStyles(theme => ({
 
 interface WellSelectProps {
   name: string,
-  availibleLabware: Labware[],
+  availableLabware: Labware[],
   initialWell?: Well,
   well?: Well,
   setWell: (w: Well) => void
   hide?: boolean
 }
 
-export const WellSelect: FC<WellSelectProps> = ({name, hide, availibleLabware, initialWell, well, setWell}) => {
+export const WellSelect: FC<WellSelectProps> = ({name, hide, availableLabware, initialWell, well, setWell}) => {
 
   const classes = useWellSelectStyles()
   const [wellPlate, setWellPlate] = React.useState<WellPlate | undefined>(initialWell?.wellPlate)
@@ -166,13 +166,19 @@ export const WellSelect: FC<WellSelectProps> = ({name, hide, availibleLabware, i
     setWellPlate(initialWell?.wellPlate)
   }, [initialWell])
   if (hide) return null
-  const wellPlates = availibleLabware
+  const wellPlates = availableLabware
     .filter((labware) => instanceOfWellPlate(labware))
     .map(val => (val as WellPlate))
+  const tipRacks = availableLabware
+    .filter((labware) => OpentronsTipRack)
+    .map(val => (val as OpentronsTipRack))
 
   return <Fragment>
+    {(tipRacks.length === 0 ) &&
+    <Typography className={classes.errorMessage} variant="h4">No Tip Racks Available!</Typography>
+    }
     {(wellPlates.length === 0) &&
-    <Typography className={classes.errorMessage} variant="h4">No Well Plates Selected!</Typography>
+    <Typography className={classes.errorMessage} variant="h4">No Well Plates Available!</Typography>
     }
     <WellPlatesSelect wellPlates={wellPlates}
                       currentWellPlate={wellPlate}

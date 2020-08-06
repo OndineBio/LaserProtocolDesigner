@@ -8,7 +8,7 @@ import {WellSelect} from "./shared/WellSelect";
 
 
 interface StepDialogProps {
-  availibleLabware: Labware[],
+  availableLabware: Labware[],
   initialStep: Step
   handleClose: () => void
   handleSave: (step: Step) => void
@@ -16,7 +16,7 @@ interface StepDialogProps {
 }
 
 
-export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, handleSave, open, availibleLabware}) => {
+export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, handleSave, open, availableLabware}) => {
 
   useEffect(() => {
     setFrom(initialStep?.from)
@@ -44,7 +44,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
         {initialStep.type}
       </DialogTitle>
       <DialogContent dividers>
-        <WellSelect availibleLabware={availibleLabware}
+        <WellSelect availableLabware={availableLabware}
                     initialWell={initialStep?.from}
                     setWell={(w) => {
                       setFrom(w)
@@ -52,7 +52,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
                     well={from}
                     hide={initialStep?.from === undefined}
                     name={"From"}/>
-        <WellSelect availibleLabware={availibleLabware}
+        <WellSelect availableLabware={availableLabware}
                     initialWell={initialStep?.to}
                     setWell={(w) => {
                       setTo(w)
@@ -61,7 +61,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
                     hide={initialStep?.to === undefined}
                     name={"Into"}/>
 
-        <WellSelect availibleLabware={availibleLabware}
+        <WellSelect availableLabware={availableLabware}
                     initialWell={initialStep?.location}
                     setWell={(w) => {
                       setLocation(w)

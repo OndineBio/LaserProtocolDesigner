@@ -245,9 +245,9 @@ export default function App() {
         }}
         handleSave={(s) => addItem(s, true)}
         open={newDialogIsOpen}
-        availibleLabware={selectedLabware}/>
+        availableLabware={selectedLabware}/>
       <StepEditDialog
-        availibleLabware={selectedLabware}
+        availableLabware={selectedLabware}
         initialStep={selectedStep} handleClose={() => {
         setSelectedStep(new PlaceHolderStep())
       }} handleSave={step => {
