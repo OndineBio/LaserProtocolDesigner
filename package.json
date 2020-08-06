@@ -7,10 +7,12 @@
     "@material-ui/core": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "@types/react-helmet": "latest",
     "file-saver": "^2.0.2",
     "jszip": "^3.5.0",
     "react": "latest",
     "react-dom": "latest",
+    "react-helmet": "latest",
     "react-scripts": "latest",
     "typescript": "latest"
   },
