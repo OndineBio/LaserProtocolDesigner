@@ -2,7 +2,7 @@ import React, {FC, useEffect} from 'react';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import {Step, Labware, Well} from "../../datatypes";
-import {TextField} from "@material-ui/core";
+import {TextField, Checkbox, FormControlLabel} from "@material-ui/core";
 import {DialogActions, DialogContent, DialogTitle} from "./shared/DialogStyledComponents";
 import {WellSelect} from "./shared/WellSelect";
 
@@ -24,6 +24,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
     setDuration(initialStep?.duration ?? 0)
     setLocation(initialStep?.location)
     setVolume(initialStep?.volume ?? 0)
+    setBlowout(initialStep?.blowout ?? false)
     setTimes(initialStep?.times ?? 0)
     setHeightOfAgar(initialStep?.heightOfAgar ??0)
 
@@ -35,6 +36,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
   const [duration, setDuration] = React.useState<number>(initialStep?.duration ?? 0)
   const [location, setLocation] = React.useState<Well | undefined>(initialStep?.location)
   const [volume, setVolume] = React.useState<number>(initialStep?.volume ?? 0)
+  const [blowout, setBlowout] = React.useState<boolean>(initialStep?.blowout ?? false)
   const [times, setTimes] = React.useState<number>(initialStep?.times ?? 0)
   const [heightOfAgar, setHeightOfAgar] = React.useState<number>(initialStep?.heightOfAgar ?? 0)
 
@@ -75,6 +77,11 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
           setVolume(Number(e.target.value))
         }} id="outlined-basic" label="Volume [µL]" variant="outlined" value={(volume === 0) ? "" : volume}/>}
 
+        {initialStep?.blowout && <FormControlLabel control={<Checkbox onChange={(e) => {
+          e.persist();
+          setBlowout(Boolean(e.target.checked))
+        }} checked={blowout}/>} label="Blowout in Dest Well?" />}
+
         {initialStep?.times && <TextField type="number" onChange={(e) => {
           e.persist();
           setTimes(Number(e.target.value))
@@ -106,6 +113,9 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
           }
           if (initialStep?.volume) {
             initialStep.volume = volume
+          }
+          if (initialStep?.blowout) {
+            initialStep.blowout = blowout
           }
           if (initialStep?.location) {
             initialStep.location = location

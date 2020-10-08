@@ -10,17 +10,17 @@ export enum StepType {
 export function stepTypeHas(type: StepType, attr: string): boolean {
   switch (type) {
     case StepType.TRANSFER:
-      return ["from", "to", "volume"].includes(attr)
+      return ["from", "to", "volume", "blowout"].includes(attr)
     case StepType.LASER:
       return ["location", "duration"].includes(attr)
     case StepType.DISPENSE:
-      return ["to", "volume"].includes(attr)
+      return ["to", "volume", "blowout"].includes(attr)
     case StepType.PLACEHOLDER:
       return false
     case StepType.ASPIRATE:
       return ["from", "volume"].includes(attr)
     case StepType.PLATE:
-      return ["from", "to", "heightOfAgar", "volume"].includes(attr)
+      return ["from", "to", "heightOfAgar", "volume", "blowout"].includes(attr)
     case StepType.MIX:
       return ["from", "volume", "times"].includes(attr)
     case StepType.WAIT:
@@ -39,19 +39,19 @@ export function stepTypeHas(type: StepType, attr: string): boolean {
 export function copyStep(s: Step) {
   switch (s.type) {
     case StepType.TRANSFER:
-      return new Transfer({...s as { from: Well, to: Well, volume: number }})
+      return new Transfer({...s as { from: Well, to: Well, volume: number, blowout: boolean }})
     case StepType.LASER:
       return new Laser({...s as { location: Well, duration: number }})
     case StepType.ASPIRATE:
       return new Aspirate({...s as { from: Well, volume: number }})
     case StepType.DISPENSE:
-      return new Dispense({...s as { to: Well, volume: number }})
+      return new Dispense({...s as { to: Well, volume: number, blowout: boolean }})
     case StepType.PLACEHOLDER:
       return new PlaceHolderStep()
     case StepType.MIX:
       return new Mix({...s as { from: Well, volume: number, times: number }})
     case StepType.PLATE:
-      return new Plate({...s as { from: Well, to: Well, volume: number, heightOfAgar: number }})
+      return new Plate({...s as { from: Well, to: Well, volume: number, heightOfAgar: number, blowout: boolean }})
     case StepType.WAIT:
       return new Wait({...s as { duration: number }})
   }
@@ -67,6 +67,7 @@ export interface Step {
   location?: Well
   heightOfAgar?: number
   volume?: number
+  blowout?: boolean
   times?: number
 }
 
@@ -89,14 +90,16 @@ export class Transfer implements Step {
   from: Well
   to: Well
   volume: number
+  blowout: boolean
 
   type = StepType.TRANSFER;
 
-  constructor({from, to, volume}: { from: Well, to: Well, volume: number }) {
+  constructor({from, to, volume, blowout}: { from: Well, to: Well, volume: number, blowout: boolean }) {
 
     this.from = from;
     this.to = to;
     this.volume = volume;
+    this.blowout = blowout;
   }
 
   getPythonString(prev: Step[], nextList: Step[]): string {
@@ -116,7 +119,7 @@ export class Transfer implements Step {
 
 # ${this.type};${JSON.stringify(this)}
 
-pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}, ${mixString}touch_tip=True, new_tip='always')`;
+pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}, ${mixString}touch_tip=True, new_tip='always', blow_out=${this.blowout.toString().charAt(0).toUpperCase() + this.blowout.toString().slice(1)})`;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`
@@ -124,8 +127,8 @@ pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonSt
   static fromImportComment(comment: string): Step {
 
     const [, json] = comment.split(";")
-    const {from, to, volume} = JSON.parse(json) as { from: JSONWell, to: JSONWell, volume: number }
-    return new Transfer({from: fromJSONWelltoWell(from), to: fromJSONWelltoWell(to), volume})
+    const {from, to, volume, blowout} = JSON.parse(json) as { from: JSONWell, to: JSONWell, volume: number, blowout: boolean }
+    return new Transfer({from: fromJSONWelltoWell(from), to: fromJSONWelltoWell(to), volume, blowout})
   }
 
 }
@@ -195,15 +198,17 @@ export class Dispense implements Step {
 
   type = StepType.DISPENSE;
 
-  constructor({to, volume}: { to: Well, volume: number }) {
+  constructor({to, volume, blowout}: { to: Well, volume: number, blowout: boolean }) {
     this.to = to;
     this.volume = volume;
+    this.blowout = blowout;
   }
 
   getPythonString(): string {
     return `
 # ${this.type}; ${JSON.stringify(this)}
 pipette.dispense(${this.volume}, ${this.to.pythonString()})
+${this.blowout ? 'pipette.blow_out()' : ''}
 pipette.drop_tip()`;
   }
 
@@ -211,8 +216,8 @@ pipette.drop_tip()`;
 
   static fromImportComment(comment: string): Step {
     const [, json] = comment.split(";")
-    const {to, volume} = JSON.parse(json) as { to: JSONWell, volume: number }
-    return new Dispense({to: fromJSONWelltoWell(to), volume})
+    const {to, volume, blowout} = JSON.parse(json) as { to: JSONWell, volume: number, blowout: boolean }
+    return new Dispense({to: fromJSONWelltoWell(to), volume, blowout})
   }
 
 
@@ -268,13 +273,15 @@ export class Plate implements Step {
   volume: number
   from: Well
   to: Well
+  blowout: boolean
   type = StepType.PLATE;
 
-  constructor({from, volume, to, heightOfAgar}: { from: Well, to: Well, volume: number, heightOfAgar: number }) {
+  constructor({from, volume, to, heightOfAgar, blowout}: { from: Well, to: Well, volume: number, heightOfAgar: number, blowout: boolean }) {
     this.heightOfAgar = heightOfAgar;
     this.from = from;
     this.to = to;
     this.volume = volume;
+    this.blowout = blowout;
   }
 
   getPythonString(prev: Step[], nextList: Step[]): string {
@@ -294,15 +301,15 @@ export class Plate implements Step {
     return `
 
 # ${this.type};${JSON.stringify(this)}
-pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}.bottom(${this.heightOfAgar}), ${mixString} new_tip='always')`;
+pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}.bottom(${this.heightOfAgar}), ${mixString} new_tip='always', blow_out=${this.blowout.toString().charAt(0).toUpperCase() + this.blowout.toString().slice(1)})`;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`
 
   static fromImportComment(comment: string): Step {
     const [, json] = comment.split(";")
-    const {from, volume, heightOfAgar, to} = JSON.parse(json) as { to: JSONWell, from: JSONWell, volume: number, heightOfAgar: number }
-    return new Plate({from: fromJSONWelltoWell(from), to: fromJSONWelltoWell(to), volume, heightOfAgar})
+    const {from, volume, heightOfAgar, to, blowout} = JSON.parse(json) as { to: JSONWell, from: JSONWell, volume: number, heightOfAgar: number, blowout: boolean }
+    return new Plate({from: fromJSONWelltoWell(from), to: fromJSONWelltoWell(to), volume, heightOfAgar, blowout})
   }
 
 

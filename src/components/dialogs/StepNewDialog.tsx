@@ -13,7 +13,7 @@ import {
   Dispense,
   Mix, Plate, Wait
 } from "../../datatypes";
-import {FormControl, InputLabel, MenuItem, Select, TextField} from "@material-ui/core";
+import {FormControl, InputLabel, MenuItem, Select, TextField, Checkbox, FormControlLabel } from "@material-ui/core";
 import {DialogActions, DialogContent, DialogTitle} from "./shared/DialogStyledComponents";
 import {WellSelect} from "./shared/WellSelect";
 import {makeStyles} from "@material-ui/core/styles";
@@ -69,6 +69,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
   const [duration, setDuration] = React.useState<number>(0)
   const [location, setLocation] = React.useState<Well | undefined>()
   const [volume, setVolume] = React.useState<number>(0)
+  const [blowout, setBlowout] = React.useState<boolean>(false)
   const [times, setTimes] = React.useState<number>(0)
   const [heightOfAgar, setHeightOfAgar] = React.useState<number>(0)
   const [currentStepType, setCurrentStepType] = React.useState<StepType | undefined>()
@@ -113,6 +114,11 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
                 setVolume(Number(e.target.value))
               }} id="outlined-basic" label="Volume [µL]" variant="outlined" value={(volume === 0) ? "" : volume}/>}
 
+              {stepTypeHas(currentStepType, "blowout") && <FormControlLabel control={<Checkbox onChange={(e) => {
+                e.persist();
+                setBlowout(Boolean(e.target.checked))
+              }}/>} label="Blowout in Dest Well?"/>}
+
               {stepTypeHas(currentStepType, "times") && <TextField type="number" onChange={(e) => {
                 e.persist();
                 setTimes(Number(e.target.value))
@@ -146,7 +152,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
           switch (currentStepType) {
             case StepType.TRANSFER:
               if (from && to && volume) {
-                step = new Transfer({from, to, volume})
+                step = new Transfer({from, to, volume, blowout})
               }
               break;
             case StepType.LASER:
@@ -160,8 +166,8 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
               }
               break;
             case StepType.DISPENSE:
-              if (to && volume) {
-                step = new Dispense({to, volume})
+              if (to && volume && blowout) {
+                step = new Dispense({to, volume, blowout})
               }
               break;
             case StepType.MIX:
@@ -170,8 +176,8 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
               }
               break;
             case StepType.PLATE:
-              if (from && volume && heightOfAgar && to) {
-                step = new Plate({from, to, volume, heightOfAgar})
+              if (from && volume && heightOfAgar && to && blowout) {
+                step = new Plate({from, to, volume, heightOfAgar, blowout})
               }
               break;
             case StepType.WAIT:
