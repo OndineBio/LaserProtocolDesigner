@@ -80,7 +80,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
         {initialStep?.blowout && <FormControlLabel control={<Checkbox onChange={(e) => {
           e.persist();
           setBlowout(Boolean(e.target.checked))
-        }} checked={blowout}/>} label="Blowout in Dest Well?" />}
+        }} checked={blowout}/>} label="Blowout in Destination Well" />}
 
         {initialStep?.times && <TextField type="number" onChange={(e) => {
           e.persist();

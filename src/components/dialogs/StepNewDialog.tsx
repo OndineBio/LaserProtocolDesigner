@@ -117,7 +117,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
               {stepTypeHas(currentStepType, "blowout") && <FormControlLabel control={<Checkbox onChange={(e) => {
                 e.persist();
                 setBlowout(Boolean(e.target.checked))
-              }}/>} label="Blowout in Dest Well?"/>}
+              }}/>} label="Blowout in Destination Well"/>}
 
               {stepTypeHas(currentStepType, "times") && <TextField type="number" onChange={(e) => {
                 e.persist();
