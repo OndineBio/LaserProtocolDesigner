@@ -72,6 +72,12 @@ function getListItemText(step: Step) {
   if (step.times) {
     secondaryArray.push(step.times + " times")
   }
+  if (step.blowout) {
+    secondaryArray.push("Blowout in Dest Well: " + step.blowout)
+  }
+  if (step.sterility) {
+    secondaryArray.push("New tip: " + step.sterility)
+  }
 
   return <ListItemText
     primary={step.type}

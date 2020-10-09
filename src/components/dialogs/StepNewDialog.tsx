@@ -72,6 +72,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
   const [blowout, setBlowout] = React.useState<boolean>(false)
   const [times, setTimes] = React.useState<number>(0)
   const [heightOfAgar, setHeightOfAgar] = React.useState<number>(0)
+  const [sterility, setSterility] = React.useState<string>("once")
   const [currentStepType, setCurrentStepType] = React.useState<StepType | undefined>()
 
 
@@ -135,6 +136,17 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
                 setDuration(Number(e.target.value))
               }} id="outlined-basic" label="Duration [sec]" variant="outlined"
                                                                       value={(duration === 0) ? "" : duration}/>}
+              {stepTypeHas(currentStepType, "sterility") && <FormControl>
+                <InputLabel id={"sterility-label"}>Change Tip</InputLabel>
+                <Select labelId={"sterility-label"} onChange={(e) => {
+                  e.persist();
+                  setSterility(e.target.value as string)
+                }} id="select" value={sterility} >
+                  <MenuItem value="once">Once at start of step</MenuItem>
+                  <MenuItem value="always">Before every aspirate</MenuItem>
+                  <MenuItem value="never">Never</MenuItem>
+                </Select>
+              </FormControl>}                                                        
 
 
             </Fragment>)}
@@ -151,8 +163,8 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
           if (currentStepType === undefined) return
           switch (currentStepType) {
             case StepType.TRANSFER:
-              if (from && to && volume) {
-                step = new Transfer({from, to, volume, blowout})
+              if (from && to && volume && blowout && sterility) {
+                step = new Transfer({from, to, volume, blowout, sterility})
               }
               break;
             case StepType.LASER:

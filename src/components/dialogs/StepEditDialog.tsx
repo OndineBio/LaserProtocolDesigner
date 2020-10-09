@@ -2,7 +2,7 @@ import React, {FC, useEffect} from 'react';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import {Step, Labware, Well} from "../../datatypes";
-import {TextField, Checkbox, FormControlLabel} from "@material-ui/core";
+import {TextField, Checkbox, FormControlLabel, FormControl, Select, InputLabel, MenuItem} from "@material-ui/core";
 import {DialogActions, DialogContent, DialogTitle} from "./shared/DialogStyledComponents";
 import {WellSelect} from "./shared/WellSelect";
 
@@ -26,7 +26,8 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
     setVolume(initialStep?.volume ?? 0)
     setBlowout(initialStep?.blowout ?? false)
     setTimes(initialStep?.times ?? 0)
-    setHeightOfAgar(initialStep?.heightOfAgar ??0)
+    setHeightOfAgar(initialStep?.heightOfAgar ?? 0)
+    setSterility(initialStep?.sterility ?? "once")
 
   }, [initialStep]);
 
@@ -39,6 +40,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
   const [blowout, setBlowout] = React.useState<boolean>(initialStep?.blowout ?? false)
   const [times, setTimes] = React.useState<number>(initialStep?.times ?? 0)
   const [heightOfAgar, setHeightOfAgar] = React.useState<number>(initialStep?.heightOfAgar ?? 0)
+  const [sterility, setSterility] = React.useState<string>(initialStep?.sterility ?? "once")
 
   return (
     <Dialog maxWidth={"md"} onClose={handleClose} aria-labelledby="customized-dialog-title" open={open}>
@@ -98,6 +100,18 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
           setDuration(Number(e.target.value))
         }} id="outlined-basic" label="Duration [sec]" variant="outlined" value={(duration === 0) ? "" : duration}/>}
 
+        {initialStep?.sterility && <FormControl>
+          <InputLabel id={"sterility-label"}>Change Tip</InputLabel>
+          <Select labelId={"sterility-label"} onChange={(e) => {
+            e.persist();
+            setSterility(e.target.value as string)
+          }} id="select" value={sterility} >
+            <MenuItem value="once">Once at start of step</MenuItem>
+            <MenuItem value="always">Before every aspirate</MenuItem>
+            <MenuItem value="never">Never</MenuItem>
+          </Select>
+        </FormControl>}
+
 
       </DialogContent>
       <DialogActions>
@@ -128,6 +142,9 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
           }
           if (initialStep?.heightOfAgar) {
             initialStep.heightOfAgar = heightOfAgar
+          }
+          if (initialStep?.sterility) {
+            initialStep.sterility = sterility
           }
           if (initialStep)
             handleSave(initialStep);

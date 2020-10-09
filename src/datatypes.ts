@@ -10,7 +10,7 @@ export enum StepType {
 export function stepTypeHas(type: StepType, attr: string): boolean {
   switch (type) {
     case StepType.TRANSFER:
-      return ["from", "to", "volume", "blowout"].includes(attr)
+      return ["from", "to", "volume", "blowout", "sterility"].includes(attr)
     case StepType.LASER:
       return ["location", "duration"].includes(attr)
     case StepType.DISPENSE:
@@ -39,7 +39,7 @@ export function stepTypeHas(type: StepType, attr: string): boolean {
 export function copyStep(s: Step) {
   switch (s.type) {
     case StepType.TRANSFER:
-      return new Transfer({...s as { from: Well, to: Well, volume: number, blowout: boolean }})
+      return new Transfer({...s as { from: Well, to: Well, volume: number, blowout: boolean, sterility: string }})
     case StepType.LASER:
       return new Laser({...s as { location: Well, duration: number }})
     case StepType.ASPIRATE:
@@ -68,6 +68,7 @@ export interface Step {
   heightOfAgar?: number
   volume?: number
   blowout?: boolean
+  sterility?: string
   times?: number
 }
 
@@ -91,15 +92,17 @@ export class Transfer implements Step {
   to: Well
   volume: number
   blowout: boolean
+  sterility: string
 
   type = StepType.TRANSFER;
 
-  constructor({from, to, volume, blowout}: { from: Well, to: Well, volume: number, blowout: boolean }) {
+  constructor({from, to, volume, blowout, sterility}: { from: Well, to: Well, volume: number, blowout: boolean, sterility: string }) {
 
     this.from = from;
     this.to = to;
     this.volume = volume;
     this.blowout = blowout;
+    this.sterility = sterility;
   }
 
   getPythonString(prev: Step[], nextList: Step[]): string {
@@ -119,7 +122,7 @@ export class Transfer implements Step {
 
 # ${this.type};${JSON.stringify(this)}
 
-pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}, ${mixString}touch_tip=True, new_tip='always', blow_out=${this.blowout.toString().charAt(0).toUpperCase() + this.blowout.toString().slice(1)})`;
+pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}, ${mixString}touch_tip=True, new_tip='${this.sterility}', blow_out=${this.blowout.toString().charAt(0).toUpperCase() + this.blowout.toString().slice(1)})`;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`
@@ -127,8 +130,8 @@ pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonSt
   static fromImportComment(comment: string): Step {
 
     const [, json] = comment.split(";")
-    const {from, to, volume, blowout} = JSON.parse(json) as { from: JSONWell, to: JSONWell, volume: number, blowout: boolean }
-    return new Transfer({from: fromJSONWelltoWell(from), to: fromJSONWelltoWell(to), volume, blowout})
+    const {from, to, volume, blowout, sterility} = JSON.parse(json) as { from: JSONWell, to: JSONWell, volume: number, blowout: boolean, sterility: string }
+    return new Transfer({from: fromJSONWelltoWell(from), to: fromJSONWelltoWell(to), volume, blowout, sterility})
   }
 
 }
