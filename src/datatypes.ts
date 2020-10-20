@@ -352,7 +352,7 @@ time.sleep(${this.duration})
 
 export enum LabwareType {
   WellPlate96 = "96 Well Plate",
-  OpentronsTipRack = "OpentronsTipRack",
+  OpentronsTipRack = "Opentrons Tip Rack",
   WellPlate6 = "6 Well Plate",
   WellPlate12 = "12 Well Plate",
   WellPlate24 = "24 Well Plate",

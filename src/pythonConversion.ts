@@ -57,9 +57,9 @@ export function importPythonProtocol({pythonFile}: { pythonFile: string }): Buil
   const labware: Labware[] = []
   const steps: Step[] = []
   let meta: string[] = []
-  pythonFile.split("\n").map(s => s.trim())
-    .filter(val => val[0] === "#")
-    .forEach((comment) => {
+  pythonFile.split("\n").map(s => s.trim()) // get every line of the input file
+    .filter(val => val[0] === "#")// get only the comments
+    .forEach((comment) => { // extract step and labware info from comments
       comment = comment.replace("#", "")
       let [className] = comment.split(";")
       className = className.trim()
