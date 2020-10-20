@@ -336,7 +336,7 @@ export class Wait implements Step {
   getPythonString(stepsBefore: Step[]): string {
     return `
 # ${this.type};${JSON.stringify(this)}
-time.sleep(${this.duration})
+protocol.delay(seconds=${this.duration})
     `;
   }
 
