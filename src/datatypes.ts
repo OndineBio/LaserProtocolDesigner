@@ -385,7 +385,7 @@ export class OpentronsTipRack implements Labware {
 
   getPythonInit(): string {
     return `
-# OpentronsTipRack;${JSON.stringify(this)}
+# ${LabwareType.OpentronsTipRack};${JSON.stringify(this)}
 ${this.name} = protocol.load_labware('opentrons_96_tiprack_300ul', ${this.slot})`;
   }
 
