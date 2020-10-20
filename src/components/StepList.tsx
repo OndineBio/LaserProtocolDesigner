@@ -75,7 +75,7 @@ function getListItemText(step: Step) {
   if (step.blowout) {
     secondaryArray.push("Blowout: " + step.blowout)
   }
-  if (step.blowoutLocation) {
+  if (step.blowout && step.blowoutLocation) {
     secondaryArray.push("Blowout Location: " + step.blowoutLocation)
   }
   if (step.sterility) {

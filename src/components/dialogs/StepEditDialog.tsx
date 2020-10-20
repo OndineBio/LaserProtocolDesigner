@@ -37,7 +37,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
     setLocation(initialStep?.location)
     setVolume(initialStep?.volume ?? 0)
     setBlowout(initialStep?.blowout ?? false)
-    setBlowoutLocation(initialStep?.blowoutLocation ?? "destination well")
+    setBlowoutLocation(initialStep?.blowoutLocation ?? "trash")
     setTimes(initialStep?.times ?? 0)
     setHeightOfAgar(initialStep?.heightOfAgar ?? 0)
     setSterility(initialStep?.sterility ?? "once")
@@ -51,7 +51,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
   const [location, setLocation] = React.useState<Well | undefined>(initialStep?.location)
   const [volume, setVolume] = React.useState<number>(initialStep?.volume ?? 0)
   const [blowout, setBlowout] = React.useState<boolean>(initialStep?.blowout ?? false)
-  const [blowoutLocation, setBlowoutLocation] = React.useState<string>(initialStep?.blowoutLocation ?? "destination well")
+  const [blowoutLocation, setBlowoutLocation] = React.useState<string>(initialStep?.blowoutLocation ?? "trash")
   const [times, setTimes] = React.useState<number>(initialStep?.times ?? 0)
   const [heightOfAgar, setHeightOfAgar] = React.useState<number>(initialStep?.heightOfAgar ?? 0)
   const [sterility, setSterility] = React.useState<string>(initialStep?.sterility ?? "once")
@@ -95,22 +95,24 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
 
         <Grid container spacing={2}>
           <Grid item xs>
-            {initialStep?.blowout && (<LightTooltip title="Not yet supported" placement="left" arrow><FormControlLabel control={<Checkbox disabled onChange={(e) => {
+            {(initialStep?.blowout === false || initialStep?.blowout === true) && (<FormControlLabel control={<Checkbox onChange={(e) => {
               e.persist();
               setBlowout(Boolean(e.target.checked))
-            }} checked={blowout}/>} label="Blowout after Dispense"/></LightTooltip>)}
+            }} checked={blowout}/>} label="Blowout after Dispense"/>)}
           </Grid>
-          <Grid item xs hidden={!blowout}>
+          <Grid item md hidden={!blowout}>
             {(initialStep?.blowoutLocation && blowout === true) && <FormControl>
               <InputLabel id={"blowout-location-label"}>Blowout Location</InputLabel>
-              <Select disabled labelId={"blowout-location-label"} onChange={(e) => {
-                e.persist();
-                setBlowoutLocation(e.target.value as string)
-              }} id="select-blowoutlocation" value={blowoutLocation} >
-                <MenuItem value="destination well">Destination Well</MenuItem>
-                <MenuItem value="source well">Source Well</MenuItem>
-                <MenuItem value="trash">Trash</MenuItem>
-              </Select>
+              <LightTooltip title="Not yet supported" placement="left" arrow>
+                <Select disabled labelId={"blowout-location-label"} onChange={(e) => {
+                  e.persist();
+                  setBlowoutLocation(e.target.value as string)
+                }} id="select-blowoutlocation" value={blowoutLocation} >
+                  <MenuItem value="destination well">Destination Well</MenuItem>
+                  <MenuItem value="source well">Source Well</MenuItem>
+                  <MenuItem value="trash">Trash</MenuItem>
+                </Select>
+              </LightTooltip>
             </FormControl>}
           </Grid>
         </Grid>
@@ -159,7 +161,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
           if (initialStep?.volume) {
             initialStep.volume = volume
           }
-          if (initialStep?.blowout) {
+          if (initialStep?.blowout === false || initialStep?.blowout === true) {
             initialStep.blowout = blowout
           }
           if (initialStep?.blowoutLocation) {

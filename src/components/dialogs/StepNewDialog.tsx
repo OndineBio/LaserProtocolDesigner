@@ -82,7 +82,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
   const [location, setLocation] = React.useState<Well | undefined>()
   const [volume, setVolume] = React.useState<number>(0)
   const [blowout, setBlowout] = React.useState<boolean>(false)
-  const [blowoutLocation, setBlowoutLocation] = React.useState<string>("destination well")
+  const [blowoutLocation, setBlowoutLocation] = React.useState<string>("trash")
   const [times, setTimes] = React.useState<number>(0)
   const [heightOfAgar, setHeightOfAgar] = React.useState<number>(0)
   const [sterility, setSterility] = React.useState<string>("once")
@@ -130,22 +130,24 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
 
               <Grid container spacing={2}>
                 <Grid item xs>
-                  {stepTypeHas(currentStepType, "blowout") && (<LightTooltip title="Not yet supported" placement="left" arrow><FormControlLabel control={<Checkbox disabled onChange={(e) => {
+                  {stepTypeHas(currentStepType, "blowout") && (<FormControlLabel control={<Checkbox onChange={(e) => {
                     e.persist();
                     setBlowout(Boolean(e.target.checked))
-                  }}/>} label="Blowout after Dispense"/></LightTooltip>)}
+                  }}/>} label="Blowout after Dispense"/>)}
                 </Grid>
-                <Grid item xs hidden={!blowout}>
+                <Grid item md hidden={!blowout}>
                   {(stepTypeHas(currentStepType, "blowoutLocation") && blowout === true) && <FormControl>
                     <InputLabel id={"blowout-location-label"}>Blowout Location</InputLabel>
-                    <Select disabled labelId={"blowout-location-label"} onChange={(e) => {
-                      e.persist();
-                      setBlowoutLocation(e.target.value as string)
-                    }} id="select-blowoutlocation" value={blowoutLocation} >
-                      <MenuItem value="destination well">Destination Well</MenuItem>
-                      <MenuItem value="source well">Source Well</MenuItem>
-                      <MenuItem value="trash">Trash</MenuItem>
-                    </Select>
+                    <LightTooltip title="Not yet supported" placement="left" arrow>
+                      <Select disabled labelId={"blowout-location-label"} onChange={(e) => {
+                        e.persist();
+                        setBlowoutLocation(e.target.value as string)
+                      }} id="select-blowoutlocation" value={blowoutLocation} >
+                        <MenuItem value="destination well">Destination Well</MenuItem>
+                        <MenuItem value="source well">Source Well</MenuItem>
+                        <MenuItem value="trash">Trash</MenuItem>
+                      </Select>
+                    </LightTooltip>
                   </FormControl>}
                 </Grid>
               </Grid>
@@ -193,7 +195,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
           if (currentStepType === undefined) return
           switch (currentStepType) {
             case StepType.TRANSFER:
-              if (from && to && volume && blowout && blowoutLocation && sterility) {
+              if (from && to && volume) {
                 step = new Transfer({from, to, volume, blowout, blowoutLocation, sterility})
               }
               break;
@@ -208,7 +210,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
               }
               break;
             case StepType.DISPENSE:
-              if (to && volume && blowout) {
+              if (to && volume) {
                 step = new Dispense({to, volume, blowout})
               }
               break;
@@ -218,7 +220,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
               }
               break;
             case StepType.PLATE:
-              if (from && volume && heightOfAgar && to && blowout && blowoutLocation) {
+              if (from && volume && heightOfAgar && to) {
                 step = new Plate({from, to, volume, heightOfAgar, blowout, blowoutLocation})
               }
               break;
