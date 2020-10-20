@@ -73,7 +73,10 @@ function getListItemText(step: Step) {
     secondaryArray.push(step.times + " times")
   }
   if (step.blowout) {
-    secondaryArray.push("Blowout in Dest Well: " + step.blowout)
+    secondaryArray.push("Blowout: " + step.blowout)
+  }
+  if (step.blowoutLocation) {
+    secondaryArray.push("Blowout Location: " + step.blowoutLocation)
   }
   if (step.sterility) {
     secondaryArray.push("New tip: " + step.sterility)

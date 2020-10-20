@@ -10,7 +10,7 @@ export enum StepType {
 export function stepTypeHas(type: StepType, attr: string): boolean {
   switch (type) {
     case StepType.TRANSFER:
-      return ["from", "to", "volume", "blowout", "sterility"].includes(attr)
+      return ["from", "to", "volume", "blowout", "blowoutLocation", "sterility"].includes(attr)
     case StepType.LASER:
       return ["location", "duration"].includes(attr)
     case StepType.DISPENSE:
@@ -20,7 +20,7 @@ export function stepTypeHas(type: StepType, attr: string): boolean {
     case StepType.ASPIRATE:
       return ["from", "volume"].includes(attr)
     case StepType.PLATE:
-      return ["from", "to", "heightOfAgar", "volume", "blowout"].includes(attr)
+      return ["from", "to", "heightOfAgar", "volume", "blowout", "blowoutLocation"].includes(attr)
     case StepType.MIX:
       return ["from", "volume", "times"].includes(attr)
     case StepType.WAIT:
@@ -39,19 +39,19 @@ export function stepTypeHas(type: StepType, attr: string): boolean {
 export function copyStep(s: Step) {
   switch (s.type) {
     case StepType.TRANSFER:
-      return new Transfer({...s as { from: Well, to: Well, volume: number, blowout: boolean, sterility: string }})
+      return new Transfer({...s as { from: Well, to: Well, volume: number, blowout: boolean, blowoutLocation: string, sterility: string }})
     case StepType.LASER:
       return new Laser({...s as { location: Well, duration: number }})
     case StepType.ASPIRATE:
       return new Aspirate({...s as { from: Well, volume: number }})
     case StepType.DISPENSE:
-      return new Dispense({...s as { to: Well, volume: number, blowout: boolean }})
+      return new Dispense({...s as { to: Well, volume: number, blowout: boolean, blowoutLocation: string}})
     case StepType.PLACEHOLDER:
       return new PlaceHolderStep()
     case StepType.MIX:
       return new Mix({...s as { from: Well, volume: number, times: number }})
     case StepType.PLATE:
-      return new Plate({...s as { from: Well, to: Well, volume: number, heightOfAgar: number, blowout: boolean }})
+      return new Plate({...s as { from: Well, to: Well, volume: number, heightOfAgar: number, blowout: boolean, blowoutLocation: string}})
     case StepType.WAIT:
       return new Wait({...s as { duration: number }})
   }
@@ -68,6 +68,7 @@ export interface Step {
   heightOfAgar?: number
   volume?: number
   blowout?: boolean
+  blowoutLocation?: string
   sterility?: string
   times?: number
 }
@@ -92,16 +93,18 @@ export class Transfer implements Step {
   to: Well
   volume: number
   blowout: boolean
+  blowoutLocation: string
   sterility: string
 
   type = StepType.TRANSFER;
 
-  constructor({from, to, volume, blowout, sterility}: { from: Well, to: Well, volume: number, blowout: boolean, sterility: string }) {
+  constructor({from, to, volume, blowout, blowoutLocation, sterility}: { from: Well, to: Well, volume: number, blowout: boolean, blowoutLocation: string, sterility: string }) {
 
     this.from = from;
     this.to = to;
     this.volume = volume;
     this.blowout = blowout;
+    this.blowoutLocation = blowoutLocation;
     this.sterility = sterility;
   }
 
@@ -122,7 +125,7 @@ export class Transfer implements Step {
 
 # ${this.type};${JSON.stringify(this)}
 
-pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}, ${mixString}touch_tip=True, new_tip='${this.sterility}', blow_out=${this.blowout.toString().charAt(0).toUpperCase() + this.blowout.toString().slice(1)})`;
+pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}, ${mixString}touch_tip=True, new_tip='${this.sterility}', blow_out=${this.blowout.toString().charAt(0).toUpperCase() + this.blowout.toString().slice(1)}, blow_out_location='${this.blowoutLocation}')`;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`
@@ -130,8 +133,8 @@ pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonSt
   static fromImportComment(comment: string): Step {
 
     const [, json] = comment.split(";")
-    const {from, to, volume, blowout, sterility} = JSON.parse(json) as { from: JSONWell, to: JSONWell, volume: number, blowout: boolean, sterility: string }
-    return new Transfer({from: fromJSONWelltoWell(from), to: fromJSONWelltoWell(to), volume, blowout, sterility})
+    const {from, to, volume, blowout, blowoutLocation, sterility} = JSON.parse(json) as { from: JSONWell, to: JSONWell, volume: number, blowout: boolean, blowoutLocation: string, sterility: string }
+    return new Transfer({from: fromJSONWelltoWell(from), to: fromJSONWelltoWell(to), volume, blowout, blowoutLocation, sterility})
   }
 
 }
@@ -277,14 +280,16 @@ export class Plate implements Step {
   from: Well
   to: Well
   blowout: boolean
+  blowoutLocation: string
   type = StepType.PLATE;
 
-  constructor({from, volume, to, heightOfAgar, blowout}: { from: Well, to: Well, volume: number, heightOfAgar: number, blowout: boolean }) {
+  constructor({from, volume, to, heightOfAgar, blowout, blowoutLocation}: { from: Well, to: Well, volume: number, heightOfAgar: number, blowout: boolean, blowoutLocation: string}) {
     this.heightOfAgar = heightOfAgar;
     this.from = from;
     this.to = to;
     this.volume = volume;
     this.blowout = blowout;
+    this.blowoutLocation = blowoutLocation;
   }
 
   getPythonString(prev: Step[], nextList: Step[]): string {
@@ -304,15 +309,15 @@ export class Plate implements Step {
     return `
 
 # ${this.type};${JSON.stringify(this)}
-pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}.bottom(${this.heightOfAgar}), ${mixString} new_tip='always', blow_out=${this.blowout.toString().charAt(0).toUpperCase() + this.blowout.toString().slice(1)})`;
+pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}.bottom(${this.heightOfAgar}), ${mixString} new_tip='always', blow_out=${this.blowout.toString().charAt(0).toUpperCase() + this.blowout.toString().slice(1)}, blow_out_location='${this.blowoutLocation}')`;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`
 
   static fromImportComment(comment: string): Step {
     const [, json] = comment.split(";")
-    const {from, volume, heightOfAgar, to, blowout} = JSON.parse(json) as { to: JSONWell, from: JSONWell, volume: number, heightOfAgar: number, blowout: boolean }
-    return new Plate({from: fromJSONWelltoWell(from), to: fromJSONWelltoWell(to), volume, heightOfAgar, blowout})
+    const {from, volume, heightOfAgar, to, blowout, blowoutLocation} = JSON.parse(json) as { to: JSONWell, from: JSONWell, volume: number, heightOfAgar: number, blowout: boolean, blowoutLocation: string }
+    return new Plate({from: fromJSONWelltoWell(from), to: fromJSONWelltoWell(to), volume, heightOfAgar, blowout, blowoutLocation})
   }
 
 
@@ -346,13 +351,15 @@ time.sleep(${this.duration})
 }
 
 export enum LabwareType {
-  WellPlate96 = "WellPlate96",
+  WellPlate96 = "96 Well Plate",
   OpentronsTipRack = "OpentronsTipRack",
-  WellPlate6 = "WellPlate6",
-  WellPlate12 = "WellPlate12",
-  WellPlate24 = "WellPlate24",
-  WellPlate48 = "WellPlate48",
-  Reservoir12 = "Reservoir12",
+  WellPlate6 = "6 Well Plate",
+  WellPlate12 = "12 Well Plate",
+  WellPlate24 = "24 Well Plate",
+  WellPlate48 = "48 Well Plate",
+  Reservoir12 = "12 Well Reservoir",
+  Falcon15TubeRack = "15 Slot Falcon Tube Rack",
+  Eppendorf2415TubeRack = "24 Slot Eppendorf 1.5mL Tube Rack",
 }
 
 
@@ -426,6 +433,12 @@ const fromJSONWelltoWell: (jw: JSONWell) => Well = (jw): Well => {
     case LabwareType.Reservoir12:
       const wp5 = new Reservoir12(jw.slot)
       return wp5.wells.find(v => v.locationString === jw.locationString) as Well
+    case LabwareType.Falcon15TubeRack:
+      const wp6 = new Falcon15TubeRack(jw.slot)
+      return wp6.wells.find(v => v.locationString === jw.locationString) as Well
+    case LabwareType.Eppendorf2415TubeRack:
+      const wp7 = new Eppendorf2415TubeRack(jw.slot)
+      return wp7.wells.find(v => v.locationString === jw.locationString) as Well
     case LabwareType.WellPlate96:
       const wp = new WellPlate96(jw.slot)
       return wp.wells.find(v => v.locationString === jw.locationString) as Well
@@ -667,3 +680,44 @@ ${this.name} = protocol.load_labware('usascientific_12_reservoir_22ml', ${this.s
 
 }
 
+export class Falcon15TubeRack extends WellPlateN {
+  constructor(slot: number) {
+    super({
+      wellHeight: 127.76,
+      wellDiameter: 14.90,
+      numberOfWells: 15,
+      type: LabwareType.Falcon15TubeRack,
+      numOfLetterWells: 3,
+      numOfNumberWells: 5,
+      loadLabwareString: "opentrons_15_tuberack_falcon_15ml_conical",
+      slot
+    });
+  }
+
+  static fromImportComment(comment: string): Labware {
+    const [, json] = comment.split(";")
+    const {slot} = JSON.parse(json) as { slot: number }
+    return new Falcon15TubeRack(slot)
+  }
+}
+
+export class Eppendorf2415TubeRack extends WellPlateN {
+  constructor(slot: number) {
+    super({
+      wellHeight: 127.75,
+      wellDiameter: 8.70,
+      numberOfWells: 24,
+      type: LabwareType.Eppendorf2415TubeRack,
+      numOfLetterWells: 4,
+      numOfNumberWells: 6,
+      loadLabwareString: "opentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap",
+      slot
+    });
+  }
+
+  static fromImportComment(comment: string): Labware {
+    const [, json] = comment.split(";")
+    const {slot} = JSON.parse(json) as { slot: number }
+    return new Eppendorf2415TubeRack(slot)
+  }
+}

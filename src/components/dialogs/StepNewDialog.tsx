@@ -13,10 +13,10 @@ import {
   Dispense,
   Mix, Plate, Wait
 } from "../../datatypes";
-import {FormControl, InputLabel, MenuItem, Select, TextField, Checkbox, FormControlLabel } from "@material-ui/core";
+import {FormControl, InputLabel, MenuItem, Select, TextField, Checkbox, FormControlLabel, Tooltip, Grid } from "@material-ui/core";
 import {DialogActions, DialogContent, DialogTitle} from "./shared/DialogStyledComponents";
 import {WellSelect} from "./shared/WellSelect";
-import {makeStyles} from "@material-ui/core/styles";
+import {makeStyles, Theme, withStyles} from "@material-ui/core/styles";
 
 
 const useSelectStepStyles = makeStyles(theme => ({
@@ -24,6 +24,18 @@ const useSelectStepStyles = makeStyles(theme => ({
     minWidth: 120,
   },
 }))
+
+const LightTooltip = withStyles((theme: Theme) => ({
+  arrow: {
+    color: theme.palette.warning.main,
+  },
+  tooltip: {
+    backgroundColor: theme.palette.warning.main,
+    color: 'rgba(0, 0, 0, 0.87)',
+    boxShadow: theme.shadows[1],
+    fontSize: 11,
+  },
+}))(Tooltip);
 
 interface SelectStepProps {
   currentStepType: StepType | undefined,
@@ -70,6 +82,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
   const [location, setLocation] = React.useState<Well | undefined>()
   const [volume, setVolume] = React.useState<number>(0)
   const [blowout, setBlowout] = React.useState<boolean>(false)
+  const [blowoutLocation, setBlowoutLocation] = React.useState<string>("destination well")
   const [times, setTimes] = React.useState<number>(0)
   const [heightOfAgar, setHeightOfAgar] = React.useState<number>(0)
   const [sterility, setSterility] = React.useState<string>("once")
@@ -115,10 +128,27 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
                 setVolume(Number(e.target.value))
               }} id="outlined-basic" label="Volume [µL]" variant="outlined" value={(volume === 0) ? "" : volume}/>}
 
-              {stepTypeHas(currentStepType, "blowout") && <FormControlLabel control={<Checkbox onChange={(e) => {
-                e.persist();
-                setBlowout(Boolean(e.target.checked))
-              }}/>} label="Blowout in Destination Well"/>}
+              <Grid container spacing={2}>
+                <Grid item xs>
+                  {stepTypeHas(currentStepType, "blowout") && (<LightTooltip title="Not yet supported" placement="left" arrow><FormControlLabel control={<Checkbox disabled onChange={(e) => {
+                    e.persist();
+                    setBlowout(Boolean(e.target.checked))
+                  }}/>} label="Blowout after Dispense"/></LightTooltip>)}
+                </Grid>
+                <Grid item xs hidden={!blowout}>
+                  {(stepTypeHas(currentStepType, "blowoutLocation") && blowout === true) && <FormControl>
+                    <InputLabel id={"blowout-location-label"}>Blowout Location</InputLabel>
+                    <Select disabled labelId={"blowout-location-label"} onChange={(e) => {
+                      e.persist();
+                      setBlowoutLocation(e.target.value as string)
+                    }} id="select-blowoutlocation" value={blowoutLocation} >
+                      <MenuItem value="destination well">Destination Well</MenuItem>
+                      <MenuItem value="source well">Source Well</MenuItem>
+                      <MenuItem value="trash">Trash</MenuItem>
+                    </Select>
+                  </FormControl>}
+                </Grid>
+              </Grid>
 
               {stepTypeHas(currentStepType, "times") && <TextField type="number" onChange={(e) => {
                 e.persist();
@@ -141,7 +171,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
                 <Select labelId={"sterility-label"} onChange={(e) => {
                   e.persist();
                   setSterility(e.target.value as string)
-                }} id="select" value={sterility} >
+                }} id="select=sterility" value={sterility} >
                   <MenuItem value="once">Once at start of step</MenuItem>
                   <MenuItem value="always">Before every aspirate</MenuItem>
                   <MenuItem value="never">Never</MenuItem>
@@ -163,8 +193,8 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
           if (currentStepType === undefined) return
           switch (currentStepType) {
             case StepType.TRANSFER:
-              if (from && to && volume && blowout && sterility) {
-                step = new Transfer({from, to, volume, blowout, sterility})
+              if (from && to && volume && blowout && blowoutLocation && sterility) {
+                step = new Transfer({from, to, volume, blowout, blowoutLocation, sterility})
               }
               break;
             case StepType.LASER:
@@ -188,8 +218,8 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
               }
               break;
             case StepType.PLATE:
-              if (from && volume && heightOfAgar && to && blowout) {
-                step = new Plate({from, to, volume, heightOfAgar, blowout})
+              if (from && volume && heightOfAgar && to && blowout && blowoutLocation) {
+                step = new Plate({from, to, volume, heightOfAgar, blowout, blowoutLocation})
               }
               break;
             case StepType.WAIT:
