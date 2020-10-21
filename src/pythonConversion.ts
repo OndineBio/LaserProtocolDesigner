@@ -1,6 +1,8 @@
 import {
   Aspirate,
   Dispense,
+  Eppendorf2415TubeRack,
+  Falcon15TubeRack,
   instanceOfWellPlate,
   Labware, LabwareType,
   Laser, Mix, OpentronsTipRack, Plate, Reservoir12,
@@ -29,7 +31,6 @@ export function buildPythonProtocolForExport({name, author, description, labware
   return `
 from opentrons import protocol_api
 from ondine_laser_control import laser
-import time
 
 # meta;${name}:${author}:${description}
 
@@ -37,7 +38,7 @@ metadata = {
     'protocolName': '${name}',
     'author': '${author}',
     'description': '${description}',
-    'apiLevel': '2.5'
+    'apiLevel': '2.7'
 }
 def run(protocol: protocol_api.ProtocolContext):
     ${labwareString}
@@ -56,9 +57,9 @@ export function importPythonProtocol({pythonFile}: { pythonFile: string }): Buil
   const labware: Labware[] = []
   const steps: Step[] = []
   let meta: string[] = []
-  pythonFile.split("\n").map(s => s.trim())
-    .filter(val => val[0] === "#")
-    .forEach((comment) => {
+  pythonFile.split("\n").map(s => s.trim()) // get every line of the input file
+    .filter(val => val[0] === "#")// get only the comments
+    .forEach((comment) => { // extract step and labware info from comments
       comment = comment.replace("#", "")
       let [className] = comment.split(";")
       className = className.trim()
@@ -104,6 +105,12 @@ export function importPythonProtocol({pythonFile}: { pythonFile: string }): Buil
           break;
         case LabwareType.WellPlate48:
           labware.push(WellPlate48.fromImportComment(comment))
+          break;
+        case LabwareType.Falcon15TubeRack:
+          labware.push(Falcon15TubeRack.fromImportComment(comment))
+          break;
+        case LabwareType.Eppendorf2415TubeRack:
+          labware.push(Eppendorf2415TubeRack.fromImportComment(comment))
           break;
         case "meta":
           meta = comment.split(";")[1].split(":");
