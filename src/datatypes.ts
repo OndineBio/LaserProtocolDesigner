@@ -358,8 +358,8 @@ export enum LabwareType {
   WellPlate24 = "24 Well Plate",
   WellPlate48 = "48 Well Plate",
   Reservoir12 = "12 Well Reservoir",
-  Falcon15TubeRack = "15 Slot Falcon Tube Rack",
-  Eppendorf2415TubeRack = "24 Slot Eppendorf 1.5mL Tube Rack",
+  TubeRack15Falcon15 = "15 Slot Falcon Tube Rack",
+  TubeRack24Eppendorf15 = "24 Slot Eppendorf 1.5mL Tube Rack",
 }
 
 
@@ -433,11 +433,11 @@ const fromJSONWelltoWell: (jw: JSONWell) => Well = (jw): Well => {
     case LabwareType.Reservoir12:
       const wp5 = new Reservoir12(jw.slot)
       return wp5.wells.find(v => v.locationString === jw.locationString) as Well
-    case LabwareType.Falcon15TubeRack:
-      const wp6 = new Falcon15TubeRack(jw.slot)
+    case LabwareType.TubeRack15Falcon15:
+      const wp6 = new TubeRack15Falcon15(jw.slot)
       return wp6.wells.find(v => v.locationString === jw.locationString) as Well
-    case LabwareType.Eppendorf2415TubeRack:
-      const wp7 = new Eppendorf2415TubeRack(jw.slot)
+    case LabwareType.TubeRack24Eppendorf15:
+      const wp7 = new TubeRack24Eppendorf15(jw.slot)
       return wp7.wells.find(v => v.locationString === jw.locationString) as Well
     case LabwareType.WellPlate96:
       const wp = new WellPlate96(jw.slot)
@@ -680,44 +680,82 @@ ${this.name} = protocol.load_labware('usascientific_12_reservoir_22ml', ${this.s
 
 }
 
-export class Falcon15TubeRack extends WellPlateN {
-  constructor(slot: number) {
-    super({
-      wellHeight: 127.76,
-      wellDiameter: 14.90,
-      numberOfWells: 15,
-      type: LabwareType.Falcon15TubeRack,
-      numOfLetterWells: 3,
-      numOfNumberWells: 5,
-      loadLabwareString: "opentrons_15_tuberack_falcon_15ml_conical",
-      slot
-    });
+export class TubeRack15Falcon15 implements WellPlate {
+  isWellPlate: true = true;
+  readonly name: string;
+  numOfLetterWells = 3;
+  numOfNumberWells = 5;
+  readonly slot: number;
+  readonly type = LabwareType.TubeRack15Falcon15;
+  readonly wells: Well[];
+  readonly wellDiameter = 14.90;
+
+  getPythonInit(): string {
+    return `
+# ${this.type};${JSON.stringify({slot: this.slot})}
+${this.name} = protocol.load_labware('opentrons_15_tuberack_falcon_15ml_conical', ${this.slot})`;
   }
 
   static fromImportComment(comment: string): Labware {
     const [, json] = comment.split(";")
     const {slot} = JSON.parse(json) as { slot: number }
-    return new Falcon15TubeRack(slot)
+    return new TubeRack15Falcon15(slot)
+  }
+
+  constructor(slot: number) {
+    this.name = "the_falcon_tube_rack_15ml_in_slot_" + slot
+    this.wells = []
+    this.slot = slot
+    const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"];
+    const usedLetters = letters.slice(0, this.numOfLetterWells)
+    usedLetters.forEach(val => {
+      for (let i = 1; i <= this.numOfNumberWells; i++) {
+        this.wells.push(new Well(this, val + i))
+      }
+    })
+  }
+
+  get wellHeight(): number {
+    throw new Error("Accessing TubeRack15Falcon15 well size!!!")
   }
 }
 
-export class Eppendorf2415TubeRack extends WellPlateN {
-  constructor(slot: number) {
-    super({
-      wellHeight: 127.75,
-      wellDiameter: 8.70,
-      numberOfWells: 24,
-      type: LabwareType.Eppendorf2415TubeRack,
-      numOfLetterWells: 4,
-      numOfNumberWells: 6,
-      loadLabwareString: "opentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap",
-      slot
-    });
+export class TubeRack24Eppendorf15 implements WellPlate {
+  isWellPlate: true = true;
+  readonly name: string;
+  numOfLetterWells = 4;
+  numOfNumberWells = 6;
+  readonly slot: number;
+  readonly type = LabwareType.TubeRack24Eppendorf15;
+  readonly wells: Well[];
+  readonly wellDiameter = 8.70;
+
+  getPythonInit(): string {
+    return `
+# ${this.type};${JSON.stringify({slot: this.slot})}
+${this.name} = protocol.load_labware('opentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap', ${this.slot})`;
   }
 
   static fromImportComment(comment: string): Labware {
     const [, json] = comment.split(";")
     const {slot} = JSON.parse(json) as { slot: number }
-    return new Eppendorf2415TubeRack(slot)
+    return new TubeRack24Eppendorf15(slot)
+  }
+
+  constructor(slot: number) {
+    this.name = "the_eppendorf_tube_rack_1500ul_in_slot_" + slot
+    this.wells = []
+    this.slot = slot
+    const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"];
+    const usedLetters = letters.slice(0, this.numOfLetterWells)
+    usedLetters.forEach(val => {
+      for (let i = 1; i <= this.numOfNumberWells; i++) {
+        this.wells.push(new Well(this, val + i))
+      }
+    })
+  }
+
+  get wellHeight(): number {
+    throw new Error("Accessing TubeRack24Eppendorf15 well size!!!")
   }
 }
