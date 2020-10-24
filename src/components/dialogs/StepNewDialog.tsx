@@ -132,14 +132,14 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
               {stepTypeHas(currentStepType, "touchtip") && (<FormControlLabel control={<Checkbox onChange={(e) => {
                 e.persist();
                 setTouchTip(Boolean(e.target.checked))
-              }}/>} label="Touch Tip"/>)}
+              }} checked={touchtip}/>} label="Touch Tip"/>)}
 
               <Grid container spacing={2}>
                 <Grid item xs>
                   {stepTypeHas(currentStepType, "blowout") && (<FormControlLabel control={<Checkbox onChange={(e) => {
                     e.persist();
                     setBlowout(Boolean(e.target.checked))
-                  }}/>} label="Blowout after Dispense"/>)}
+                  }} checked={blowout}/>} label="Blowout after Dispense"/>)}
                 </Grid>
                 <Grid item md hidden={!blowout}>
                   {(stepTypeHas(currentStepType, "blowoutLocation") && blowout === true) && <FormControl>
