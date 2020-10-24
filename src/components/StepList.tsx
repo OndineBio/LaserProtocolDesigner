@@ -72,6 +72,9 @@ function getListItemText(step: Step) {
   if (step.times) {
     secondaryArray.push(step.times + " times")
   }
+  if (step.touchtip) {
+    secondaryArray.push("Touch tip: " + step.touchtip)
+  }
   if (step.blowout) {
     secondaryArray.push("Blowout: " + step.blowout)
   }

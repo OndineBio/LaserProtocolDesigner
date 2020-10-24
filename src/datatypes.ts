@@ -10,17 +10,17 @@ export enum StepType {
 export function stepTypeHas(type: StepType, attr: string): boolean {
   switch (type) {
     case StepType.TRANSFER:
-      return ["from", "to", "volume", "blowout", "blowoutLocation", "sterility"].includes(attr)
+      return ["from", "to", "volume", "touchtip", "blowout", "blowoutLocation", "sterility"].includes(attr)
     case StepType.LASER:
       return ["location", "duration"].includes(attr)
     case StepType.DISPENSE:
-      return ["to", "volume", "blowout"].includes(attr)
+      return ["to", "volume", "touchtip", "blowout"].includes(attr)
     case StepType.PLACEHOLDER:
       return false
     case StepType.ASPIRATE:
-      return ["from", "volume"].includes(attr)
+      return ["from", "volume", "touchtip"].includes(attr)
     case StepType.PLATE:
-      return ["from", "to", "heightOfAgar", "volume", "blowout", "blowoutLocation"].includes(attr)
+      return ["from", "to", "heightOfAgar", "volume", "touchtip", "blowout", "blowoutLocation"].includes(attr)
     case StepType.MIX:
       return ["from", "volume", "times"].includes(attr)
     case StepType.WAIT:
@@ -39,19 +39,19 @@ export function stepTypeHas(type: StepType, attr: string): boolean {
 export function copyStep(s: Step) {
   switch (s.type) {
     case StepType.TRANSFER:
-      return new Transfer({...s as { from: Well, to: Well, volume: number, blowout: boolean, blowoutLocation: string, sterility: string }})
+      return new Transfer({...s as { from: Well, to: Well, volume: number, touchtip: boolean, blowout: boolean, blowoutLocation: string, sterility: string }})
     case StepType.LASER:
       return new Laser({...s as { location: Well, duration: number }})
     case StepType.ASPIRATE:
-      return new Aspirate({...s as { from: Well, volume: number }})
+      return new Aspirate({...s as { from: Well, volume: number, touchtip: boolean }})
     case StepType.DISPENSE:
-      return new Dispense({...s as { to: Well, volume: number, blowout: boolean, blowoutLocation: string}})
+      return new Dispense({...s as { to: Well, volume: number, touchtip: boolean, blowout: boolean, blowoutLocation: string}})
     case StepType.PLACEHOLDER:
       return new PlaceHolderStep()
     case StepType.MIX:
-      return new Mix({...s as { from: Well, volume: number, times: number }})
+      return new Mix({...s as { from: Well, volume: number, touchtip: boolean, times: number }})
     case StepType.PLATE:
-      return new Plate({...s as { from: Well, to: Well, volume: number, heightOfAgar: number, blowout: boolean, blowoutLocation: string}})
+      return new Plate({...s as { from: Well, to: Well, volume: number, touchtip: boolean, heightOfAgar: number, blowout: boolean, blowoutLocation: string}})
     case StepType.WAIT:
       return new Wait({...s as { duration: number }})
   }
@@ -67,6 +67,7 @@ export interface Step {
   location?: Well
   heightOfAgar?: number
   volume?: number
+  touchtip?: boolean
   blowout?: boolean
   blowoutLocation?: string
   sterility?: string
@@ -92,17 +93,19 @@ export class Transfer implements Step {
   from: Well
   to: Well
   volume: number
+  touchtip: boolean
   blowout: boolean
   blowoutLocation: string
   sterility: string
 
   type = StepType.TRANSFER;
 
-  constructor({from, to, volume, blowout, blowoutLocation, sterility}: { from: Well, to: Well, volume: number, blowout: boolean, blowoutLocation: string, sterility: string }) {
+  constructor({from, to, volume, touchtip, blowout, blowoutLocation, sterility}: { from: Well, to: Well, volume: number, touchtip: boolean, blowout: boolean, blowoutLocation: string, sterility: string }) {
 
     this.from = from;
     this.to = to;
     this.volume = volume;
+    this.touchtip = touchtip;
     this.blowout = blowout;
     this.blowoutLocation = blowoutLocation;
     this.sterility = sterility;
@@ -125,7 +128,7 @@ export class Transfer implements Step {
 
 # ${this.type};${JSON.stringify(this)}
 
-pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}, ${mixString}touch_tip=True, new_tip='${this.sterility}', blow_out=${this.blowout.toString().charAt(0).toUpperCase() + this.blowout.toString().slice(1)}, blow_out_location='${this.blowoutLocation}')`;
+pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}, ${mixString}touch_tip=${this.touchtip.toString().charAt(0).toUpperCase() + this.touchtip.toString().slice(1)}, new_tip='${this.sterility}', blow_out=${this.blowout.toString().charAt(0).toUpperCase() + this.blowout.toString().slice(1)}, blow_out_location='${this.blowoutLocation}')`;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`
@@ -133,8 +136,8 @@ pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonSt
   static fromImportComment(comment: string): Step {
 
     const [, json] = comment.split(";")
-    const {from, to, volume, blowout, blowoutLocation, sterility} = JSON.parse(json) as { from: JSONWell, to: JSONWell, volume: number, blowout: boolean, blowoutLocation: string, sterility: string }
-    return new Transfer({from: fromJSONWelltoWell(from), to: fromJSONWelltoWell(to), volume, blowout, blowoutLocation, sterility})
+    const {from, to, volume, touchtip, blowout, blowoutLocation, sterility} = JSON.parse(json) as { from: JSONWell, to: JSONWell, volume: number, touchtip: boolean, blowout: boolean, blowoutLocation: string, sterility: string }
+    return new Transfer({from: fromJSONWelltoWell(from), to: fromJSONWelltoWell(to), volume, touchtip, blowout, blowoutLocation, sterility})
   }
 
 }
@@ -176,9 +179,10 @@ export class Aspirate implements Step {
   type = StepType.ASPIRATE;
 
 
-  constructor({from, volume}: { from: Well, volume: number }) {
+  constructor({from, volume, touchtip}: { from: Well, volume: number, touchtip: boolean }) {
     this.from = from;
     this.volume = volume;
+    this.touchtip = touchtip;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`
@@ -188,13 +192,15 @@ export class Aspirate implements Step {
     return `
 # ${this.type};${JSON.stringify(this)}
 ${last?.type !== StepType.MIX ? "pipette.pick_up_tip()" : ""}
-pipette.aspirate(${this.volume}, ${this.from.pythonString()})`;
+pipette.aspirate(${this.volume}, ${this.from.pythonString()})
+${this.touchtip ? 'pipette.touch_tip()'  : ''}
+`;
   }
 
   static fromImportComment(comment: string): Step {
     const [, json] = comment.split(";")
-    const {from, volume} = JSON.parse(json) as { from: JSONWell, volume: number }
-    return new Aspirate({from: fromJSONWelltoWell(from), volume})
+    const {from, volume, touchtip} = JSON.parse(json) as { from: JSONWell, volume: number, touchtip: boolean }
+    return new Aspirate({from: fromJSONWelltoWell(from), volume, touchtip})
   }
 
 }
@@ -204,9 +210,10 @@ export class Dispense implements Step {
 
   type = StepType.DISPENSE;
 
-  constructor({to, volume, blowout}: { to: Well, volume: number, blowout: boolean }) {
+  constructor({to, volume, touchtip, blowout}: { to: Well, volume: number, touchtip: boolean, blowout: boolean }) {
     this.to = to;
     this.volume = volume;
+    this.touchtip = touchtip;
     this.blowout = blowout;
   }
 
@@ -214,6 +221,7 @@ export class Dispense implements Step {
     return `
 # ${this.type}; ${JSON.stringify(this)}
 pipette.dispense(${this.volume}, ${this.to.pythonString()})
+${this.touchtip ? 'pipette.touch_tip()'  : ''}
 ${this.blowout ? 'pipette.blow_out()' : ''}
 pipette.drop_tip()`;
   }
@@ -222,8 +230,8 @@ pipette.drop_tip()`;
 
   static fromImportComment(comment: string): Step {
     const [, json] = comment.split(";")
-    const {to, volume, blowout} = JSON.parse(json) as { to: JSONWell, volume: number, blowout: boolean }
-    return new Dispense({to: fromJSONWelltoWell(to), volume, blowout})
+    const {to, volume, touchtip, blowout} = JSON.parse(json) as { to: JSONWell, volume: number, touchtip: boolean, blowout: boolean }
+    return new Dispense({to: fromJSONWelltoWell(to), volume, touchtip, blowout})
   }
 
 
@@ -279,15 +287,17 @@ export class Plate implements Step {
   volume: number
   from: Well
   to: Well
+  touchtip: boolean
   blowout: boolean
   blowoutLocation: string
   type = StepType.PLATE;
 
-  constructor({from, volume, to, heightOfAgar, blowout, blowoutLocation}: { from: Well, to: Well, volume: number, heightOfAgar: number, blowout: boolean, blowoutLocation: string}) {
+  constructor({from, to, volume, touchtip, heightOfAgar, blowout, blowoutLocation}: { from: Well, to: Well, volume: number, touchtip: boolean, heightOfAgar: number, blowout: boolean, blowoutLocation: string}) {
     this.heightOfAgar = heightOfAgar;
     this.from = from;
     this.to = to;
     this.volume = volume;
+    this.touchtip = touchtip;
     this.blowout = blowout;
     this.blowoutLocation = blowoutLocation;
   }
@@ -309,15 +319,15 @@ export class Plate implements Step {
     return `
 
 # ${this.type};${JSON.stringify(this)}
-pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}.bottom(${this.heightOfAgar}), ${mixString} new_tip='always', blow_out=${this.blowout.toString().charAt(0).toUpperCase() + this.blowout.toString().slice(1)}, blow_out_location='${this.blowoutLocation}')`;
+pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}.bottom(${this.heightOfAgar}), ${mixString}touch_tip=${this.touchtip.toString().charAt(0).toUpperCase() + this.touchtip.toString().slice(1)}, new_tip='always', blow_out=${this.blowout.toString().charAt(0).toUpperCase() + this.blowout.toString().slice(1)}, blow_out_location='${this.blowoutLocation}')`;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`
 
   static fromImportComment(comment: string): Step {
     const [, json] = comment.split(";")
-    const {from, volume, heightOfAgar, to, blowout, blowoutLocation} = JSON.parse(json) as { to: JSONWell, from: JSONWell, volume: number, heightOfAgar: number, blowout: boolean, blowoutLocation: string }
-    return new Plate({from: fromJSONWelltoWell(from), to: fromJSONWelltoWell(to), volume, heightOfAgar, blowout, blowoutLocation})
+    const {from, volume, touchtip, heightOfAgar, to, blowout, blowoutLocation} = JSON.parse(json) as { to: JSONWell, from: JSONWell, volume: number, touchtip: boolean, heightOfAgar: number, blowout: boolean, blowoutLocation: string }
+    return new Plate({from: fromJSONWelltoWell(from), to: fromJSONWelltoWell(to), volume, touchtip, heightOfAgar, blowout, blowoutLocation})
   }
 
 
