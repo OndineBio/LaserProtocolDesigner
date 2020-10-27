@@ -1,8 +1,8 @@
 import {
   Aspirate,
   Dispense,
-  Eppendorf2415TubeRack,
-  Falcon15TubeRack,
+  TubeRack24Eppendorf15,
+  TubeRack15Falcon15,
   instanceOfWellPlate,
   Labware, LabwareType,
   Laser, Mix, OpentronsTipRack, Plate, Reservoir12,
@@ -28,9 +28,11 @@ export function buildPythonProtocolForExport({name, author, description, labware
     .filter(val => !instanceOfWellPlate(val))
     .map(val => val.name).join(", ")
   console.log({labwareString, stepString, tipRacksString})
+  let hasLaser = false;
+  if(steps.some(step => step.type === "LASER")) { hasLaser = true }
   return `
 from opentrons import protocol_api
-from ondine_laser_control import laser
+${hasLaser ? 'from ondine_laser_control import laser' : ''}
 
 # meta;${name}:${author}:${description}
 
@@ -44,8 +46,8 @@ def run(protocol: protocol_api.ProtocolContext):
     ${labwareString}
 
     pipette = protocol.load_instrument('p300_single_gen2', 'right', tip_racks=[${tipRacksString}])
-  
-    laserController = laser.Controller(protocol=protocol)
+
+    ${hasLaser ? 'laserController = laser.Controller(protocol=protocol)' : ''}
 
     ${stepString}
     #end
@@ -106,11 +108,11 @@ export function importPythonProtocol({pythonFile}: { pythonFile: string }): Buil
         case LabwareType.WellPlate48:
           labware.push(WellPlate48.fromImportComment(comment))
           break;
-        case LabwareType.Falcon15TubeRack:
-          labware.push(Falcon15TubeRack.fromImportComment(comment))
+        case LabwareType.TubeRack15Falcon15:
+          labware.push(TubeRack15Falcon15.fromImportComment(comment))
           break;
-        case LabwareType.Eppendorf2415TubeRack:
-          labware.push(Eppendorf2415TubeRack.fromImportComment(comment))
+        case LabwareType.TubeRack24Eppendorf15:
+          labware.push(TubeRack24Eppendorf15.fromImportComment(comment))
           break;
         case "meta":
           meta = comment.split(";")[1].split(":");

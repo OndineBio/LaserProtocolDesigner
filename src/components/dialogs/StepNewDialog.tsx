@@ -81,6 +81,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
   const [duration, setDuration] = React.useState<number>(0)
   const [location, setLocation] = React.useState<Well | undefined>()
   const [volume, setVolume] = React.useState<number>(0)
+  const [touchtip, setTouchTip] = React.useState<boolean>(true)
   const [blowout, setBlowout] = React.useState<boolean>(false)
   const [blowoutLocation, setBlowoutLocation] = React.useState<string>("trash")
   const [times, setTimes] = React.useState<number>(0)
@@ -127,13 +128,18 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
                 e.persist();
                 setVolume(Number(e.target.value))
               }} id="outlined-basic" label="Volume [µL]" variant="outlined" value={(volume === 0) ? "" : volume}/>}
+              
+              {stepTypeHas(currentStepType, "touchtip") && (<FormControlLabel control={<Checkbox onChange={(e) => {
+                e.persist();
+                setTouchTip(Boolean(e.target.checked))
+              }} checked={touchtip}/>} label="Touch Tip"/>)}
 
               <Grid container spacing={2}>
                 <Grid item xs>
                   {stepTypeHas(currentStepType, "blowout") && (<FormControlLabel control={<Checkbox onChange={(e) => {
                     e.persist();
                     setBlowout(Boolean(e.target.checked))
-                  }}/>} label="Blowout after Dispense"/>)}
+                  }} checked={blowout}/>} label="Blowout after Dispense"/>)}
                 </Grid>
                 <Grid item md hidden={!blowout}>
                   {(stepTypeHas(currentStepType, "blowoutLocation") && blowout === true) && <FormControl>
@@ -196,7 +202,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
           switch (currentStepType) {
             case StepType.TRANSFER:
               if (from && to && volume) {
-                step = new Transfer({from, to, volume, blowout, blowoutLocation, sterility})
+                step = new Transfer({from, to, volume, touchtip, blowout, blowoutLocation, sterility})
               }
               break;
             case StepType.LASER:
@@ -206,12 +212,12 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
               break;
             case StepType.ASPIRATE:
               if (from && volume) {
-                step = new Aspirate({from, volume})
+                step = new Aspirate({from, volume, touchtip})
               }
               break;
             case StepType.DISPENSE:
               if (to && volume) {
-                step = new Dispense({to, volume, blowout})
+                step = new Dispense({to, volume, touchtip, blowout})
               }
               break;
             case StepType.MIX:
@@ -221,7 +227,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
               break;
             case StepType.PLATE:
               if (from && volume && heightOfAgar && to) {
-                step = new Plate({from, to, volume, heightOfAgar, blowout, blowoutLocation})
+                step = new Plate({from, to, volume, touchtip, heightOfAgar, blowout, blowoutLocation})
               }
               break;
             case StepType.WAIT:

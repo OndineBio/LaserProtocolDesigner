@@ -3,8 +3,8 @@ import Container from '@material-ui/core/Container';
 import Box from '@material-ui/core/Box';
 import {
   copyStep,
-  Eppendorf2415TubeRack,
-  Falcon15TubeRack,
+  TubeRack24Eppendorf15,
+  TubeRack15Falcon15,
   Labware,
   LabwareType,
   OpentronsTipRack,
@@ -133,8 +133,8 @@ export default function App() {
     LabwareType.WellPlate24,
     LabwareType.WellPlate12,
     LabwareType.WellPlate6,
-    LabwareType.Falcon15TubeRack,
-    LabwareType.Eppendorf2415TubeRack,
+    LabwareType.TubeRack15Falcon15,
+    LabwareType.TubeRack24Eppendorf15,
   ]
 
   const [selectedLabware, setSelectedLabware] = useState<Labware[]>([] as Labware[])
@@ -156,10 +156,10 @@ export default function App() {
             return new Reservoir12(slot)
           case LabwareType.OpentronsTipRack:
             return new OpentronsTipRack(slot)
-          case LabwareType.Falcon15TubeRack:
-            return new Falcon15TubeRack(slot)
-          case LabwareType.Eppendorf2415TubeRack:
-            return new Eppendorf2415TubeRack(slot)
+          case LabwareType.TubeRack15Falcon15:
+            return new TubeRack15Falcon15(slot)
+          case LabwareType.TubeRack24Eppendorf15:
+            return new TubeRack24Eppendorf15(slot)
           default:
             console.error(selected)
             throw new Error("Invalid Labware Type")

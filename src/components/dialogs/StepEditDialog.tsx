@@ -36,6 +36,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
     setDuration(initialStep?.duration ?? 0)
     setLocation(initialStep?.location)
     setVolume(initialStep?.volume ?? 0)
+    setTouchTip(initialStep?.touchtip ?? true)
     setBlowout(initialStep?.blowout ?? false)
     setBlowoutLocation(initialStep?.blowoutLocation ?? "trash")
     setTimes(initialStep?.times ?? 0)
@@ -50,6 +51,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
   const [duration, setDuration] = React.useState<number>(initialStep?.duration ?? 0)
   const [location, setLocation] = React.useState<Well | undefined>(initialStep?.location)
   const [volume, setVolume] = React.useState<number>(initialStep?.volume ?? 0)
+  const [touchtip, setTouchTip] = React.useState<boolean>(initialStep?.touchtip ?? true)
   const [blowout, setBlowout] = React.useState<boolean>(initialStep?.blowout ?? false)
   const [blowoutLocation, setBlowoutLocation] = React.useState<string>(initialStep?.blowoutLocation ?? "trash")
   const [times, setTimes] = React.useState<number>(initialStep?.times ?? 0)
@@ -92,6 +94,11 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
           e.persist();
           setVolume(Number(e.target.value))
         }} id="outlined-basic" label="Volume [µL]" variant="outlined" value={(volume === 0) ? "" : volume}/>}
+
+        {(initialStep?.touchtip === false || initialStep?.touchtip === true) && (<FormControlLabel control={<Checkbox onChange={(e) => {
+          e.persist();
+          setTouchTip(Boolean(e.target.checked))
+        }} checked={touchtip}/>} label="Touch Tip"/>)}
 
         <Grid container spacing={2}>
           <Grid item xs>
@@ -160,6 +167,9 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
           }
           if (initialStep?.volume) {
             initialStep.volume = volume
+          }
+          if (initialStep?.touchtip === false || initialStep?.touchtip === true) {
+            initialStep.touchtip = touchtip
           }
           if (initialStep?.blowout === false || initialStep?.blowout === true) {
             initialStep.blowout = blowout
