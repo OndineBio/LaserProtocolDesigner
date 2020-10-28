@@ -1,8 +1,7 @@
 {
-  "name": "create-react-app-with-typescript",
+  "name": "laser_protocol_designer",
   "version": "4.0.0",
   "private": true,
-  "homepage": "https://ondinebio.github.io/LaserProtocolDesigner/",
   "dependencies": {
     "@material-ui/core": "latest",
     "@types/react": "^16.9.51",
