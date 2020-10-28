@@ -83,7 +83,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
   const [volume, setVolume] = React.useState<number>(0)
   const [touchtip, setTouchTip] = React.useState<boolean>(true)
   const [blowout, setBlowout] = React.useState<boolean>(false)
-  const [blowoutLocation, setBlowoutLocation] = React.useState<string>("trash")
+  const [blowoutLocation, setBlowoutLocation] = React.useState<string>("destination well")
   const [times, setTimes] = React.useState<number>(0)
   const [heightOfAgar, setHeightOfAgar] = React.useState<number>(0)
   const [sterility, setSterility] = React.useState<string>("once")
@@ -144,16 +144,14 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
                 <Grid item md hidden={!blowout}>
                   {(stepTypeHas(currentStepType, "blowoutLocation") && blowout === true) && <FormControl>
                     <InputLabel id={"blowout-location-label"}>Blowout Location</InputLabel>
-                    <LightTooltip title="Not yet supported" placement="left" arrow>
-                      <Select disabled labelId={"blowout-location-label"} onChange={(e) => {
-                        e.persist();
-                        setBlowoutLocation(e.target.value as string)
-                      }} id="select-blowoutlocation" value={blowoutLocation} >
-                        <MenuItem value="destination well">Destination Well</MenuItem>
-                        <MenuItem value="source well">Source Well</MenuItem>
-                        <MenuItem value="trash">Trash</MenuItem>
-                      </Select>
-                    </LightTooltip>
+                    <Select labelId={"blowout-location-label"} onChange={(e) => {
+                      e.persist();
+                      setBlowoutLocation(e.target.value as string)
+                    }} id="select-blowoutlocation" value={blowoutLocation} >
+                      <MenuItem value="destination well">Destination Well</MenuItem>
+                      <MenuItem value="source well">Source Well</MenuItem>
+                      <MenuItem value="trash">Trash</MenuItem>
+                    </Select>
                   </FormControl>}
                 </Grid>
               </Grid>
