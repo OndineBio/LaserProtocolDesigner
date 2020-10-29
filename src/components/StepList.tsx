@@ -75,6 +75,9 @@ function getListItemText(step: Step) {
   if (step.touchtip) {
     secondaryArray.push("Touch tip: " + step.touchtip)
   }
+  if (step.airgap) {
+    secondaryArray.push("Airgap: " + step.airgap + "µL")
+  }
   if (step.blowout) {
     secondaryArray.push("Blowout: " + step.blowout)
   }
