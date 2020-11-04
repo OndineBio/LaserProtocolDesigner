@@ -82,6 +82,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
   const [location, setLocation] = React.useState<Well | undefined>()
   const [volume, setVolume] = React.useState<number>(0)
   const [touchtip, setTouchTip] = React.useState<boolean>(true)
+  const [airgap, setAirgap] = React.useState<number>(0)
   const [blowout, setBlowout] = React.useState<boolean>(false)
   const [blowoutLocation, setBlowoutLocation] = React.useState<string>("trash")
   const [times, setTimes] = React.useState<number>(0)
@@ -124,7 +125,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
                           well={location}
                           hide={!stepTypeHas(currentStepType, "location")}
               />
-              {stepTypeHas(currentStepType, "volume") && <TextField type="number" onChange={(e) => {
+              {stepTypeHas(currentStepType, "volume") && <TextField required type="number" onChange={(e) => {
                 e.persist();
                 setVolume(Number(e.target.value))
               }} id="outlined-basic" label="Volume [µL]" variant="outlined" value={(volume === 0) ? "" : volume}/>}
@@ -133,6 +134,11 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
                 e.persist();
                 setTouchTip(Boolean(e.target.checked))
               }} checked={touchtip}/>} label="Touch Tip"/>)}
+              
+              {stepTypeHas(currentStepType, "airgap") && <TextField type="number" onChange={(e) => {
+                e.persist();
+                setAirgap(Number(e.target.value))
+              }} id="outlined-basic" label="Airgap after Aspirate" variant="outlined" value={(airgap === 0) ? "" : airgap}/>}
 
               <Grid container spacing={2}>
                 <Grid item xs>
@@ -158,18 +164,18 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
                 </Grid>
               </Grid>
 
-              {stepTypeHas(currentStepType, "times") && <TextField type="number" onChange={(e) => {
+              {stepTypeHas(currentStepType, "times") && <TextField required type="number" onChange={(e) => {
                 e.persist();
                 setTimes(Number(e.target.value))
               }} id="outlined-basic" label="Times to mix" variant="outlined" value={(times === 0) ? "" : times}/>}
 
-              {stepTypeHas(currentStepType, "heightOfAgar") && <TextField type="number" onChange={(e) => {
+              {stepTypeHas(currentStepType, "heightOfAgar") && <TextField required type="number" onChange={(e) => {
                 e.persist();
                 setHeightOfAgar(Number(e.target.value))
               }} id="outlined-basic" label="Height of Agar [mm]" variant="outlined"
                                                                           value={(heightOfAgar === 0) ? "" : heightOfAgar}/>}
 
-              {stepTypeHas(currentStepType, "duration") && <TextField type="number" onChange={(e) => {
+              {stepTypeHas(currentStepType, "duration") && <TextField required type="number" onChange={(e) => {
                 e.persist();
                 setDuration(Number(e.target.value))
               }} id="outlined-basic" label="Duration [sec]" variant="outlined"
@@ -202,7 +208,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
           switch (currentStepType) {
             case StepType.TRANSFER:
               if (from && to && volume) {
-                step = new Transfer({from, to, volume, touchtip, blowout, blowoutLocation, sterility})
+                step = new Transfer({from, to, volume, touchtip, airgap, blowout, blowoutLocation, sterility})
               }
               break;
             case StepType.LASER:
@@ -227,7 +233,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
               break;
             case StepType.PLATE:
               if (from && volume && heightOfAgar && to) {
-                step = new Plate({from, to, volume, touchtip, heightOfAgar, blowout, blowoutLocation})
+                step = new Plate({from, to, volume, touchtip, airgap, heightOfAgar, blowout, blowoutLocation})
               }
               break;
             case StepType.WAIT:

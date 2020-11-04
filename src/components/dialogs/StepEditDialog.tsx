@@ -1,7 +1,7 @@
 import React, {FC, useEffect} from 'react';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
-import {Step, Labware, Well} from "../../datatypes";
+import {Step, stepTypeHas, Labware, Well} from "../../datatypes";
 import {TextField, Checkbox, FormControlLabel, FormControl, Select, InputLabel, MenuItem, Grid, withStyles, Theme, Tooltip} from "@material-ui/core";
 import {DialogActions, DialogContent, DialogTitle} from "./shared/DialogStyledComponents";
 import {WellSelect} from "./shared/WellSelect";
@@ -37,6 +37,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
     setLocation(initialStep?.location)
     setVolume(initialStep?.volume ?? 0)
     setTouchTip(initialStep?.touchtip ?? true)
+    setAirgap(initialStep?.airgap ?? 0)
     setBlowout(initialStep?.blowout ?? false)
     setBlowoutLocation(initialStep?.blowoutLocation ?? "trash")
     setTimes(initialStep?.times ?? 0)
@@ -52,6 +53,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
   const [location, setLocation] = React.useState<Well | undefined>(initialStep?.location)
   const [volume, setVolume] = React.useState<number>(initialStep?.volume ?? 0)
   const [touchtip, setTouchTip] = React.useState<boolean>(initialStep?.touchtip ?? true)
+  const [airgap, setAirgap] = React.useState<number>(initialStep?.airgap ?? 0)
   const [blowout, setBlowout] = React.useState<boolean>(initialStep?.blowout ?? false)
   const [blowoutLocation, setBlowoutLocation] = React.useState<string>(initialStep?.blowoutLocation ?? "trash")
   const [times, setTimes] = React.useState<number>(initialStep?.times ?? 0)
@@ -100,6 +102,11 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
           setTouchTip(Boolean(e.target.checked))
         }} checked={touchtip}/>} label="Touch Tip"/>)}
 
+        {stepTypeHas(initialStep?.type, "airgap") ? <TextField type="number" onChange={(e) => {
+          e.persist();
+          setAirgap(Number(e.target.value))
+        }} id="outlined-basic" label="Airgap after Aspirate" variant="outlined" value={(airgap === 0) ? "" : airgap}/> : ''}
+
         <Grid container spacing={2}>
           <Grid item xs>
             {(initialStep?.blowout === false || initialStep?.blowout === true) && (<FormControlLabel control={<Checkbox onChange={(e) => {
@@ -129,11 +136,11 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
           setTimes(Number(e.target.value))
         }} id="outlined-basic" label="Times to mix" variant="outlined" value={(times === 0) ? "" : times}/>}
 
-        {initialStep?.heightOfAgar && <TextField type="number" onChange={(e) => {
+        {stepTypeHas(initialStep?.type, "heightOfAgar") ? <TextField type="number" onChange={(e) => {
           e.persist();
           setHeightOfAgar(Number(e.target.value))
         }} id="outlined-basic" label="Height of Agar [mm]" variant="outlined"
-                                                                    value={(heightOfAgar === 0) ? "" : heightOfAgar}/>}
+                                                                    value={(heightOfAgar === 0) ? "" : heightOfAgar}/> : ''}
 
         {initialStep?.duration && <TextField type="number" onChange={(e) => {
           e.persist();
@@ -165,11 +172,16 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
           if (initialStep?.from) {
             initialStep.from = from
           }
-          if (initialStep?.volume) {
-            initialStep.volume = volume
+          if (stepTypeHas(initialStep?.type, "volume")) {
+            if (volume !== 0) {
+              initialStep.volume = volume
+            }
           }
           if (initialStep?.touchtip === false || initialStep?.touchtip === true) {
             initialStep.touchtip = touchtip
+          }
+          if (stepTypeHas(initialStep?.type, "airgap")) {
+            initialStep.airgap = airgap
           }
           if (initialStep?.blowout === false || initialStep?.blowout === true) {
             initialStep.blowout = blowout
@@ -181,13 +193,17 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
             initialStep.location = location
           }
           if (initialStep?.duration) {
-            initialStep.duration = duration
+            if (duration !== 0) {
+              initialStep.duration = duration
+            }
           }
           if (initialStep?.times) {
             initialStep.times = times
           }
-          if (initialStep?.heightOfAgar) {
-            initialStep.heightOfAgar = heightOfAgar
+          if (stepTypeHas(initialStep?.type, "heightOfAgar")) {
+            if (heightOfAgar !== 0) {
+              initialStep.heightOfAgar = heightOfAgar
+            }
           }
           if (initialStep?.sterility) {
             initialStep.sterility = sterility
