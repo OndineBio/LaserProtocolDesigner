@@ -125,7 +125,7 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
                           well={location}
                           hide={!stepTypeHas(currentStepType, "location")}
               />
-              {stepTypeHas(currentStepType, "volume") && <TextField type="number" onChange={(e) => {
+              {stepTypeHas(currentStepType, "volume") && <TextField required type="number" onChange={(e) => {
                 e.persist();
                 setVolume(Number(e.target.value))
               }} id="outlined-basic" label="Volume [µL]" variant="outlined" value={(volume === 0) ? "" : volume}/>}
@@ -164,18 +164,18 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
                 </Grid>
               </Grid>
 
-              {stepTypeHas(currentStepType, "times") && <TextField type="number" onChange={(e) => {
+              {stepTypeHas(currentStepType, "times") && <TextField required type="number" onChange={(e) => {
                 e.persist();
                 setTimes(Number(e.target.value))
               }} id="outlined-basic" label="Times to mix" variant="outlined" value={(times === 0) ? "" : times}/>}
 
-              {stepTypeHas(currentStepType, "heightOfAgar") && <TextField type="number" onChange={(e) => {
+              {stepTypeHas(currentStepType, "heightOfAgar") && <TextField required type="number" onChange={(e) => {
                 e.persist();
                 setHeightOfAgar(Number(e.target.value))
               }} id="outlined-basic" label="Height of Agar [mm]" variant="outlined"
                                                                           value={(heightOfAgar === 0) ? "" : heightOfAgar}/>}
 
-              {stepTypeHas(currentStepType, "duration") && <TextField type="number" onChange={(e) => {
+              {stepTypeHas(currentStepType, "duration") && <TextField required type="number" onChange={(e) => {
                 e.persist();
                 setDuration(Number(e.target.value))
               }} id="outlined-basic" label="Duration [sec]" variant="outlined"

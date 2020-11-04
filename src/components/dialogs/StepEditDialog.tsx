@@ -172,7 +172,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
           if (initialStep?.from) {
             initialStep.from = from
           }
-          if (initialStep?.volume) {
+          if (stepTypeHas(initialStep?.type, "volume")) {
             if (volume !== 0) {
               initialStep.volume = volume
             }
@@ -180,7 +180,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
           if (initialStep?.touchtip === false || initialStep?.touchtip === true) {
             initialStep.touchtip = touchtip
           }
-          if (initialStep?.airgap) {
+          if (stepTypeHas(initialStep?.type, "airgap")) {
             initialStep.airgap = airgap
           }
           if (initialStep?.blowout === false || initialStep?.blowout === true) {
@@ -200,7 +200,7 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
           if (initialStep?.times) {
             initialStep.times = times
           }
-          if (initialStep?.heightOfAgar) {
+          if (stepTypeHas(initialStep?.type, "heightOfAgar")) {
             if (heightOfAgar !== 0) {
               initialStep.heightOfAgar = heightOfAgar
             }
