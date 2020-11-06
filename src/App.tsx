@@ -14,7 +14,7 @@ import {
   WellPlate96,
 } from "./datatypes";
 import {StepList} from "./components/StepList";
-import {AppBar, createStyles, Fab, TextField, Theme, Toolbar, Typography} from "@material-ui/core";
+import {AppBar, Checkbox, createStyles, Fab, FormControlLabel, Grid, TextField, Theme, Toolbar, Typography} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
 import {StepEditDialog} from "./components/dialogs/StepEditDialog";
 import {BasePlateSelect} from "./components/BasePlateSelect";
@@ -124,6 +124,8 @@ export default function App() {
   const [name, setName] = useState<string>("")
   const [description, setDescription] = useState<string>("")
   const [author, setAuthor] = useState<string>("")
+  const [customPipetteSpeeds, setCustomPipetteSpeeds] = useState<boolean>(false)
+  const [pipetteSpeeds, setPipetteSpeeds] = useState<number[]>([92.86, 92.86, 92.86])
 
   const labwareTypes = [
     LabwareType.OpentronsTipRack,
@@ -172,6 +174,8 @@ export default function App() {
     name,
     author,
     description,
+    customPipetteSpeeds,
+    pipetteSpeeds,
     labware: selectedLabware,
     steps: steps
   }
@@ -224,6 +228,52 @@ export default function App() {
           variant="outlined"
           value={description}
         />
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={<Checkbox
+              onChange={(e) => {
+                setCustomPipetteSpeeds(Boolean(e.target.value))
+              }}
+              checked={customPipetteSpeeds}
+              />}
+              label="Customize Pipette Speeds"
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              // onChange={(e) => {
+                //   setPipetteSpeeds(Number(e.target.value))
+              // }}
+              label="Aspirate Speed (µL/sec)"
+              variant="outlined"
+              value={pipetteSpeeds[0]}
+              hidden={!customPipetteSpeeds}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              // onChange={(e) => {
+                //   setPipetteSpeeds(Number(e.target.value))
+                // }}
+                label="Dispense Speed (µL/sec)"
+                variant="outlined"
+                value={pipetteSpeeds[1]}
+                hidden={!customPipetteSpeeds}
+                />  
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              // onChange={(e) => {
+                //   setPipetteSpeeds(Number(e.target.value))
+                // }}
+                label="Blowout Speed (µL/sec)"
+                variant="outlined"
+                value={pipetteSpeeds[2]}
+                hidden={!customPipetteSpeeds}
+                />     
+          </Grid>
+        </Grid>
 
       </Container>
       <BasePlateSelect labware={labwareTypes} currentSelected={selectedLabware}

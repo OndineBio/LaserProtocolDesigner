@@ -14,11 +14,13 @@ export interface BuildPythonProtocolOptions {
   name: string,
   author: string,
   description: string,
+  customPipetteSpeeds: boolean,
+  pipetteSpeeds: number[],
   labware: Labware[],
   steps: Step[]
 }
 
-export function buildPythonProtocolForExport({name, author, description, labware, steps}: BuildPythonProtocolOptions) {
+export function buildPythonProtocolForExport({name, author, description, customPipetteSpeeds, pipetteSpeeds, labware, steps}: BuildPythonProtocolOptions) {
   const labwareString = labware.map(val => val.getPythonInit()).join("\n").replace(/\n/g, "\n    ")
   const stepString = steps.map((val, index, array) => val.getPythonString(array.slice(0, index), array.slice(index+1)))
     .map(v => {console.log(v); return v})
@@ -35,6 +37,7 @@ from opentrons import protocol_api
 ${hasLaser ? 'from ondine_laser_control import laser' : ''}
 
 # meta;${name}:${author}:${description}
+# speeds;${pipetteSpeeds[0]}:${pipetteSpeeds[1]}:${pipetteSpeeds[2]}
 
 metadata = {
     'protocolName': '${name}',
@@ -46,6 +49,9 @@ def run(protocol: protocol_api.ProtocolContext):
     ${labwareString}
 
     pipette = protocol.load_instrument('p300_single_gen2', 'right', tip_racks=[${tipRacksString}])
+    ${customPipetteSpeeds ? 'pipette.flow_rate.aspirate = ' + pipetteSpeeds[0] : ''}
+    ${customPipetteSpeeds ? 'pipette.flow_rate.dispense = ' + pipetteSpeeds[1] : ''}
+    ${customPipetteSpeeds ? 'pipette.flow_rate.blow_out = ' + pipetteSpeeds[2] : ''}
 
     ${hasLaser ? 'laserController = laser.Controller(protocol=protocol)' : ''}
 
@@ -59,6 +65,7 @@ export function importPythonProtocol({pythonFile}: { pythonFile: string }): Buil
   const labware: Labware[] = []
   const steps: Step[] = []
   let meta: string[] = []
+  let pipetteSpeeds: number[] = []
   pythonFile.split("\n").map(s => s.trim()) // get every line of the input file
     .filter(val => val[0] === "#")// get only the comments
     .forEach((comment) => { // extract step and labware info from comments
@@ -117,13 +124,28 @@ export function importPythonProtocol({pythonFile}: { pythonFile: string }): Buil
         case "meta":
           meta = comment.split(";")[1].split(":");
           break;
+        case "speeds":
+          pipetteSpeeds = comment.split(";")[1].split(":").map(Number);
       }
     })
+  let customPipetteSpeeds = false
+  if (pipetteSpeeds[0] !== 92.86) {
+    customPipetteSpeeds = true
+  }
+  else if (pipetteSpeeds[1] !== 92.86) {
+    customPipetteSpeeds = true
+  }
+  else if (pipetteSpeeds[2] !== 92.86) {
+    customPipetteSpeeds = true
+  }
+
   const [name, author, description] = meta;
   return {
     name,
     author,
     description,
+    customPipetteSpeeds,
+    pipetteSpeeds,
     labware,
     steps
   }
