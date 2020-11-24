@@ -2,7 +2,7 @@ import React, {FC, useEffect} from 'react';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import {Step, stepTypeHas, Labware, Well} from "../../datatypes";
-import {TextField, Checkbox, FormControlLabel, FormControl, Select, InputLabel, MenuItem, Grid, withStyles, Theme, Tooltip} from "@material-ui/core";
+import {TextField, Checkbox, FormControlLabel, FormControl, Select, InputLabel, MenuItem, Grid} from "@material-ui/core";
 import {DialogActions, DialogContent, DialogTitle} from "./shared/DialogStyledComponents";
 import {WellSelect} from "./shared/WellSelect";
 
@@ -14,19 +14,6 @@ interface StepDialogProps {
   handleSave: (step: Step) => void
   open: boolean
 }
-
-const LightTooltip = withStyles((theme: Theme) => ({
-  arrow: {
-    color: theme.palette.warning.main,
-  },
-  tooltip: {
-    backgroundColor: theme.palette.warning.main,
-    color: 'rgba(0, 0, 0, 0.87)',
-    boxShadow: theme.shadows[1],
-    fontSize: 11,
-  },
-}))(Tooltip);
-
 
 export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, handleSave, open, availableLabware}) => {
 
@@ -119,16 +106,14 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
           <Grid item md hidden={!blowout}>
             {(initialStep?.blowoutLocation && blowout === true) && <FormControl>
               <InputLabel id={"blowout-location-label"}>Blowout Location</InputLabel>
-              <LightTooltip title="Not yet supported" placement="left" arrow>
-                <Select disabled labelId={"blowout-location-label"} onChange={(e) => {
-                  e.persist();
-                  setBlowoutLocation(e.target.value as string)
-                }} id="select-blowoutlocation" value={blowoutLocation} >
-                  <MenuItem value="destination well">Destination Well</MenuItem>
-                  <MenuItem value="source well">Source Well</MenuItem>
-                  <MenuItem value="trash">Trash</MenuItem>
-                </Select>
-              </LightTooltip>
+              <Select labelId={"blowout-location-label"} onChange={(e) => {
+                e.persist();
+                setBlowoutLocation(e.target.value as string)
+              }} id="select-blowoutlocation" value={blowoutLocation} >
+                <MenuItem value="destination well">Destination Well</MenuItem>
+                <MenuItem value="source well">Source Well</MenuItem>
+                <MenuItem value="trash">Trash</MenuItem>
+              </Select>
             </FormControl>}
           </Grid>
         </Grid>
