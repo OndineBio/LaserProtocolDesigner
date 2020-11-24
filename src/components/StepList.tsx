@@ -87,6 +87,11 @@ function getListItemText(step: Step) {
   if (step.sterility) {
     secondaryArray.push("New tip: " + step.sterility)
   }
+  if (step.pipetteSpeeds) {
+    secondaryArray.push("Aspirate Speed: " + step.pipetteSpeeds[0] + "µL/sec")
+    secondaryArray.push("Dispense Speed: " + step.pipetteSpeeds[1] + "µL/sec")
+    secondaryArray.push("Blowout Speed: " + step.pipetteSpeeds[2] + "µL/sec")
+  }
 
   return <ListItemText
     primary={step.type}
