@@ -1,5 +1,6 @@
 import {
   Aspirate,
+  ChangeSpeed,
   Dispense,
   TubeRack24Eppendorf15,
   TubeRack15Falcon15,
@@ -87,6 +88,9 @@ export function importPythonProtocol({pythonFile}: { pythonFile: string }): Buil
         case StepType.WAIT:
           steps.push(Wait.fromImportComment(comment))
           break;
+        case StepType.CHANGESPEED:
+          steps.push(ChangeSpeed.fromImportComment(comment))
+          break;
         case LabwareType.OpentronsTipRack:
           labware.push(OpentronsTipRack.fromImportComment(comment))
           break;
@@ -119,6 +123,7 @@ export function importPythonProtocol({pythonFile}: { pythonFile: string }): Buil
           break;
       }
     })
+
   const [name, author, description] = meta;
   return {
     name,

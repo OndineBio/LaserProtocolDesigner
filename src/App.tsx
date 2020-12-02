@@ -121,9 +121,10 @@ export default function App() {
   }
   const [newDialogIsOpen, setNewDialogIsOpen] = React.useState<boolean>(false)
 
-  const [name, setName] = useState<string>("")
-  const [description, setDescription] = useState<string>("")
-  const [author, setAuthor] = useState<string>("")
+  const [name, setName]                       = React.useState<string>("")
+  const [description, setDescription]         = React.useState<string>("")
+  const [author, setAuthor]                   = React.useState<string>("")
+
 
   const labwareTypes = [
     LabwareType.OpentronsTipRack,

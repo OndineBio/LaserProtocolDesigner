@@ -2,7 +2,7 @@ import React, {FC, useEffect} from 'react';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import {Step, stepTypeHas, Labware, Well} from "../../datatypes";
-import {TextField, Checkbox, FormControlLabel, FormControl, Select, InputLabel, MenuItem, Grid, withStyles, Theme, Tooltip} from "@material-ui/core";
+import {TextField, Checkbox, FormControlLabel, FormControl, Select, InputLabel, MenuItem, Grid} from "@material-ui/core";
 import {DialogActions, DialogContent, DialogTitle} from "./shared/DialogStyledComponents";
 import {WellSelect} from "./shared/WellSelect";
 
@@ -14,19 +14,6 @@ interface StepDialogProps {
   handleSave: (step: Step) => void
   open: boolean
 }
-
-const LightTooltip = withStyles((theme: Theme) => ({
-  arrow: {
-    color: theme.palette.warning.main,
-  },
-  tooltip: {
-    backgroundColor: theme.palette.warning.main,
-    color: 'rgba(0, 0, 0, 0.87)',
-    boxShadow: theme.shadows[1],
-    fontSize: 11,
-  },
-}))(Tooltip);
-
 
 export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, handleSave, open, availableLabware}) => {
 
@@ -43,22 +30,24 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
     setTimes(initialStep?.times ?? 0)
     setHeightOfAgar(initialStep?.heightOfAgar ?? 0)
     setSterility(initialStep?.sterility ?? "once")
+    setPipetteSpeeds(initialStep?.pipetteSpeeds ?? [92.86, 92.86, 92.86])
 
   }, [initialStep]);
 
 
-  const [from, setFrom] = React.useState<Well | undefined>(initialStep?.from)
-  const [to, setTo] = React.useState<Well | undefined>(initialStep?.to)
-  const [duration, setDuration] = React.useState<number>(initialStep?.duration ?? 0)
-  const [location, setLocation] = React.useState<Well | undefined>(initialStep?.location)
-  const [volume, setVolume] = React.useState<number>(initialStep?.volume ?? 0)
-  const [touchtip, setTouchTip] = React.useState<boolean>(initialStep?.touchtip ?? true)
-  const [airgap, setAirgap] = React.useState<number>(initialStep?.airgap ?? 0)
-  const [blowout, setBlowout] = React.useState<boolean>(initialStep?.blowout ?? false)
-  const [blowoutLocation, setBlowoutLocation] = React.useState<string>(initialStep?.blowoutLocation ?? "destination well")
-  const [times, setTimes] = React.useState<number>(initialStep?.times ?? 0)
-  const [heightOfAgar, setHeightOfAgar] = React.useState<number>(initialStep?.heightOfAgar ?? 0)
-  const [sterility, setSterility] = React.useState<string>(initialStep?.sterility ?? "once")
+  const [from, setFrom]                       = React.useState<Well | undefined>(initialStep?.from)
+  const [to, setTo]                           = React.useState<Well | undefined>(initialStep?.to)
+  const [duration, setDuration]               = React.useState<number>(initialStep?.duration ?? 0)
+  const [location, setLocation]               = React.useState<Well | undefined>(initialStep?.location)
+  const [volume, setVolume]                   = React.useState<number>(initialStep?.volume ?? 0)
+  const [touchtip, setTouchTip]               = React.useState<boolean>(initialStep?.touchtip ?? true)
+  const [airgap, setAirgap]                   = React.useState<number>(initialStep?.airgap ?? 0)
+  const [blowout, setBlowout]                 = React.useState<boolean>(initialStep?.blowout ?? false)
+  const [blowoutLocation, setBlowoutLocation] = React.useState<string>(initialStep?.blowoutLocation ?? "trash")
+  const [times, setTimes]                     = React.useState<number>(initialStep?.times ?? 0)
+  const [heightOfAgar, setHeightOfAgar]       = React.useState<number>(initialStep?.heightOfAgar ?? 0)
+  const [sterility, setSterility]             = React.useState<string>(initialStep?.sterility ?? "once")
+  const [pipetteSpeeds, setPipetteSpeeds]     = React.useState<number[]>(initialStep?.pipetteSpeeds ?? [92.86, 92.86, 92.86])
 
   return (
     <Dialog maxWidth={"md"} onClose={handleClose} aria-labelledby="customized-dialog-title" open={open}>
@@ -157,6 +146,60 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
           </Select>
         </FormControl>}
 
+        {stepTypeHas(initialStep?.type, "pipetteSpeeds") && (<Grid container spacing={2}> 
+          <Grid item xs={3}>
+            <TextField
+              onChange={(e) => {
+                e.persist();
+                setPipetteSpeeds([Number(e.target.value), pipetteSpeeds[1], pipetteSpeeds[2]])
+              }}
+              label="Aspirate Speed (µL/sec)"
+              variant="outlined"
+              value={pipetteSpeeds[0]}
+            />
+            <Button onClick={() => {
+              setPipetteSpeeds([92.86, pipetteSpeeds[1], pipetteSpeeds[2]])
+              }}
+                color="primary">
+              Reset to Default
+            </Button>
+          </Grid>
+          <Grid item xs={3}>
+            <TextField
+              onChange={(e) => {
+                e.persist();
+                setPipetteSpeeds([pipetteSpeeds[0], Number(e.target.value), pipetteSpeeds[2]])
+              }}
+              label="Dispense Speed (µL/sec)"
+              variant="outlined"
+              value={pipetteSpeeds[1]}
+            />  
+            <Button onClick={() => {
+              setPipetteSpeeds([pipetteSpeeds[0], 92.86, pipetteSpeeds[2]])
+              }}
+                color="primary">
+              Reset to Default
+            </Button>
+          </Grid>
+          <Grid item xs={3}>
+            <TextField
+              onChange={(e) => {
+                e.persist();
+                setPipetteSpeeds([pipetteSpeeds[0], pipetteSpeeds[1], Number(e.target.value)])
+              }}
+              label="Blowout Speed (µL/sec)"
+              variant="outlined"
+              value={pipetteSpeeds[2]}
+            />     
+            <Button onClick={() => {
+              setPipetteSpeeds([pipetteSpeeds[0], pipetteSpeeds[1], 92.86])
+              }}
+                color="primary">
+              Reset to Default
+            </Button>
+          </Grid>
+        </Grid>)}
+
 
       </DialogContent>
       <DialogActions>
@@ -205,6 +248,9 @@ export const StepEditDialog: FC<StepDialogProps> = ({initialStep, handleClose, h
           }
           if (initialStep?.sterility) {
             initialStep.sterility = sterility
+          }
+          if (stepTypeHas(initialStep?.type, "pipetteSpeeds")) {
+            initialStep.pipetteSpeeds = pipetteSpeeds
           }
           if (initialStep)
             handleSave(initialStep);

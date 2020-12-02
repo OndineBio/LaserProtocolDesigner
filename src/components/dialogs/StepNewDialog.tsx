@@ -11,12 +11,12 @@ import {
   Laser,
   Aspirate,
   Dispense,
-  Mix, Plate, Wait
+  Mix, Plate, Wait, ChangeSpeed
 } from "../../datatypes";
-import {FormControl, InputLabel, MenuItem, Select, TextField, Checkbox, FormControlLabel, Tooltip, Grid } from "@material-ui/core";
+import {FormControl, InputLabel, MenuItem, Select, TextField, Checkbox, FormControlLabel, Grid } from "@material-ui/core";
 import {DialogActions, DialogContent, DialogTitle} from "./shared/DialogStyledComponents";
 import {WellSelect} from "./shared/WellSelect";
-import {makeStyles, Theme, withStyles} from "@material-ui/core/styles";
+import {makeStyles} from "@material-ui/core/styles";
 
 
 const useSelectStepStyles = makeStyles(theme => ({
@@ -25,18 +25,6 @@ const useSelectStepStyles = makeStyles(theme => ({
   },
 }))
 
-const LightTooltip = withStyles((theme: Theme) => ({
-  arrow: {
-    color: theme.palette.warning.main,
-  },
-  tooltip: {
-    backgroundColor: theme.palette.warning.main,
-    color: 'rgba(0, 0, 0, 0.87)',
-    boxShadow: theme.shadows[1],
-    fontSize: 11,
-  },
-}))(Tooltip);
-
 interface SelectStepProps {
   currentStepType: StepType | undefined,
   setCurrentStepType: (type: StepType) => void,
@@ -44,7 +32,7 @@ interface SelectStepProps {
 
 const SelectStep: FC<SelectStepProps> = ({currentStepType, setCurrentStepType}) => {
   const classes = useSelectStepStyles();
-  const options = [StepType.TRANSFER, StepType.LASER, StepType.ASPIRATE, StepType.DISPENSE, StepType.MIX, StepType.PLATE, StepType.WAIT]
+  const options = [StepType.TRANSFER, StepType.LASER, StepType.ASPIRATE, StepType.DISPENSE, StepType.MIX, StepType.PLATE, StepType.WAIT, StepType.CHANGESPEED]
   return (
     <FormControl className={classes.formControl}>
       <InputLabel id={"select-step-label"}>Select Step Type</InputLabel>
@@ -76,21 +64,20 @@ interface StepNewDialogProps {
 export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, open, availableLabware}) => {
 
 
-  const [from, setFrom] = React.useState<Well | undefined>()
-  const [to, setTo] = React.useState<Well | undefined>()
-  const [duration, setDuration] = React.useState<number>(0)
-  const [location, setLocation] = React.useState<Well | undefined>()
-  const [volume, setVolume] = React.useState<number>(0)
-  const [touchtip, setTouchTip] = React.useState<boolean>(true)
-  const [airgap, setAirgap] = React.useState<number>(0)
-  const [blowout, setBlowout] = React.useState<boolean>(false)
-  const [blowoutLocation, setBlowoutLocation] = React.useState<string>("destination well")
-  const [times, setTimes] = React.useState<number>(0)
-  const [heightOfAgar, setHeightOfAgar] = React.useState<number>(0)
-  const [sterility, setSterility] = React.useState<string>("once")
+  const [from, setFrom]                       = React.useState<Well | undefined>()
+  const [to, setTo]                           = React.useState<Well | undefined>()
+  const [duration, setDuration]               = React.useState<number>(0)
+  const [location, setLocation]               = React.useState<Well | undefined>()
+  const [volume, setVolume]                   = React.useState<number>(0)
+  const [touchtip, setTouchTip]               = React.useState<boolean>(true)
+  const [airgap, setAirgap]                   = React.useState<number>(0)
+  const [blowout, setBlowout]                 = React.useState<boolean>(false)
+  const [blowoutLocation, setBlowoutLocation] = React.useState<string>("trash")
+  const [times, setTimes]                     = React.useState<number>(0)
+  const [heightOfAgar, setHeightOfAgar]       = React.useState<number>(0)
+  const [sterility, setSterility]             = React.useState<string>("once")
   const [currentStepType, setCurrentStepType] = React.useState<StepType | undefined>()
-
-
+  const [pipetteSpeeds, setPipetteSpeeds]     = React.useState<number[]>([92.86, 92.86, 92.86])
 
   return (
     <Dialog maxWidth={"md"} onClose={handleClose} aria-labelledby="customized-dialog-title" open={open}>
@@ -188,8 +175,61 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
                   <MenuItem value="always">Before every aspirate</MenuItem>
                   <MenuItem value="never">Never</MenuItem>
                 </Select>
-              </FormControl>}                                                        
+              </FormControl>}
 
+              {stepTypeHas(currentStepType, "pipetteSpeeds") && (<Grid container spacing={2}> 
+                <Grid item xs={3}>
+                  <TextField
+                    onChange={(e) => {
+                      e.persist();
+                      setPipetteSpeeds([Number(e.target.value), pipetteSpeeds[1], pipetteSpeeds[2]])
+                    }}
+                    label="Aspirate Speed (µL/sec)"
+                    variant="outlined"
+                    value={pipetteSpeeds[0]}
+                  />
+                  <Button onClick={() => {
+                    setPipetteSpeeds([92.86, pipetteSpeeds[1], pipetteSpeeds[2]])
+                    }}
+                     color="primary">
+                    Reset to Default
+                  </Button>
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField
+                    onChange={(e) => {
+                      e.persist();
+                      setPipetteSpeeds([pipetteSpeeds[0], Number(e.target.value), pipetteSpeeds[2]])
+                    }}
+                    label="Dispense Speed (µL/sec)"
+                    variant="outlined"
+                    value={pipetteSpeeds[1]}
+                  />
+                  <Button onClick={() => {
+                    setPipetteSpeeds([pipetteSpeeds[0], 92.86, pipetteSpeeds[2]])
+                    }}
+                     color="primary">
+                    Reset to Default
+                  </Button>
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField
+                    onChange={(e) => {
+                      e.persist();
+                      setPipetteSpeeds([pipetteSpeeds[0], pipetteSpeeds[1], Number(e.target.value)])
+                    }}
+                    label="Blowout Speed (µL/sec)"
+                    variant="outlined"
+                    value={pipetteSpeeds[2]}
+                  />
+                  <Button onClick={() => {
+                    setPipetteSpeeds([pipetteSpeeds[0], pipetteSpeeds[1], 92.86])
+                    }}
+                     color="primary">
+                    Reset to Default
+                  </Button>
+                </Grid>
+              </Grid>)}
 
             </Fragment>)}
 
@@ -237,6 +277,11 @@ export const StepNewDialog: FC<StepNewDialogProps> = ({handleClose, handleSave, 
             case StepType.WAIT:
               if (duration) {
                 step = new Wait({duration})
+              }
+              break;
+            case StepType.CHANGESPEED:
+              if (pipetteSpeeds) {
+                step = new ChangeSpeed({pipetteSpeeds})
               }
               break;
             case StepType.PLACEHOLDER:

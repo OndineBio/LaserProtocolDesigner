@@ -5,6 +5,7 @@ export enum StepType {
   PLACEHOLDER = "PLACEHOLDER",
   MIX = "MIX", WAIT = "WAIT",
   PLATE = "PLATE",
+  CHANGESPEED = "CHANGESPEED",
 }
 
 export function stepTypeHas(type: StepType, attr: string): boolean {
@@ -25,6 +26,8 @@ export function stepTypeHas(type: StepType, attr: string): boolean {
       return ["from", "volume", "times"].includes(attr)
     case StepType.WAIT:
       return ["duration"].includes(attr)
+    case StepType.CHANGESPEED:
+      return ["pipetteSpeeds"].includes(attr)
   }
   return false
 }
@@ -54,6 +57,8 @@ export function copyStep(s: Step) {
       return new Plate({...s as { from: Well, to: Well, volume: number, touchtip: boolean, airgap: number, heightOfAgar: number, blowout: boolean, blowoutLocation: string}})
     case StepType.WAIT:
       return new Wait({...s as { duration: number }})
+    case StepType.CHANGESPEED:
+      return new ChangeSpeed({...s as {pipetteSpeeds: number[]}})
   }
 }
 
@@ -73,6 +78,7 @@ export interface Step {
   blowoutLocation?: string
   sterility?: string
   times?: number
+  pipetteSpeeds?: number[]
 }
 
 export class PlaceHolderStep implements Step {
@@ -362,6 +368,35 @@ protocol.delay(seconds=${this.duration})
     const {duration} = JSON.parse(json) as {duration: number }
 
     return new Wait({duration})
+  }
+}
+
+export class ChangeSpeed implements Step {
+  [k: string]: any;
+
+  type = StepType.CHANGESPEED;
+
+  constructor({ pipetteSpeeds}: { pipetteSpeeds: number[] }) {
+
+    this.pipetteSpeeds = pipetteSpeeds;
+  }
+
+  getPythonString(stepsBefore: Step[]): string {
+    return `
+# ${this.type};${JSON.stringify(this)}
+pipette.flow_rate.aspirate = ${this.pipetteSpeeds[0]}
+pipette.flow_rate.dispense = ${this.pipetteSpeeds[1]}
+pipette.flow_rate.blow_out = ${this.pipetteSpeeds[2]}
+    `;
+  }
+
+  id: string = `${Math.floor(Math.random() * 1e6)}`
+
+  static fromImportComment(comment: string): Step {
+    const [, json] = comment.split(";")
+
+    const {pipetteSpeeds} = JSON.parse(json) as {pipetteSpeeds: number[]}
+    return new ChangeSpeed({pipetteSpeeds})
   }
 }
 
