@@ -131,7 +131,7 @@ export class Transfer implements Step {
 
 # ${this.type};${JSON.stringify(this)}
 
-pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}, ${mixString}touch_tip=${this.touchtip.toString().charAt(0).toUpperCase() + this.touchtip.toString().slice(1)}, new_tip='${this.sterility}',${this.airgap === 0 ? '' : 'air_gap=' + this.airgap + ','} blow_out=${this.blowout.toString().charAt(0).toUpperCase() + this.blowout.toString().slice(1)}, blow_out_location='${this.blowoutLocation}')`;
+pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}, ${mixString}touch_tip=${this.touchtip.toString().charAt(0).toUpperCase() + this.touchtip.toString().slice(1)}, new_tip='${this.sterility}',${this.airgap === 0 ? '' : 'air_gap=' + this.airgap + ','} blow_out=${this.blowout.toString().charAt(0).toUpperCase() + this.blowout.toString().slice(1)}, blowout_location='${this.blowoutLocation}')`;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`
@@ -324,7 +324,7 @@ export class Plate implements Step {
     return `
 
 # ${this.type};${JSON.stringify(this)}
-pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}.bottom(${this.heightOfAgar}), ${mixString}touch_tip=${this.touchtip.toString().charAt(0).toUpperCase() + this.touchtip.toString().slice(1)},${this.airgap === 0 ? '' : ' air_gap=' + this.airgap + ','} new_tip='always', blow_out=${this.blowout.toString().charAt(0).toUpperCase() + this.blowout.toString().slice(1)}, blow_out_location='${this.blowoutLocation}')`;
+pipette.transfer(${this.volume}, ${this.from.pythonString()}, ${this.to.pythonString()}.bottom(${this.heightOfAgar}), ${mixString}touch_tip=${this.touchtip.toString().charAt(0).toUpperCase() + this.touchtip.toString().slice(1)},${this.airgap === 0 ? '' : ' air_gap=' + this.airgap + ','} new_tip='always', blow_out=${this.blowout.toString().charAt(0).toUpperCase() + this.blowout.toString().slice(1)}, blowout_location='${this.blowoutLocation}')`;
   }
 
   id: string = `${Math.floor(Math.random() * 1e6)}`

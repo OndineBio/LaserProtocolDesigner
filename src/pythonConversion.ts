@@ -40,7 +40,7 @@ metadata = {
     'protocolName': '${name}',
     'author': '${author}',
     'description': '${description}',
-    'apiLevel': '2.7'
+    'apiLevel': '2.8'
 }
 def run(protocol: protocol_api.ProtocolContext):
     ${labwareString}
