@@ -8,7 +8,7 @@ import {
   Labware, LabwareType,
   Laser, Mix, OpentronsTipRack, Plate, Reservoir12,
   Step, StepType,
-  Transfer, Wait, WellPlate12, WellPlate24, WellPlate48, WellPlate6, WellPlate96
+  Transfer, Wait, WellPlate12, WellPlate24, WellPlate48, WellPlate6, WellPlate96, FalconPetriDish90mm
 } from "./datatypes";
 
 export interface BuildPythonProtocolOptions {
@@ -117,6 +117,9 @@ export function importPythonProtocol({pythonFile}: { pythonFile: string }): Buil
           break;
         case LabwareType.TubeRack24Eppendorf15:
           labware.push(TubeRack24Eppendorf15.fromImportComment(comment))
+          break;
+        case LabwareType.FalconPetriDish90mm:
+          labware.push(FalconPetriDish90mm.fromImportComment(comment))
           break;
         case "meta":
           meta = comment.split(";")[1].split(":");
