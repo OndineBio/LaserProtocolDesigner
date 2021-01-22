@@ -817,12 +817,12 @@ ${this.name} = protocol.load_labware('opentrons_24_tuberack_eppendorf_1.5ml_safe
 export class FalconPetriDish90mm implements WellPlate {
   isWellPlate: true = true;
   readonly name: string;
-  numOfLetterWells = 4;
-  numOfNumberWells = 4;
+  numOfLetterWells = 3;
+  numOfNumberWells = 3;
   readonly slot: number;
   readonly type = LabwareType.FalconPetriDish90mm;
   readonly wells: Well[];
-  readonly wellDiameter = 15.5;
+  readonly wellDiameter = 20.66;
 
   getPythonInit(): string {
     return `
