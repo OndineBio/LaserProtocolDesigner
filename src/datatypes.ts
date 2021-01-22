@@ -410,6 +410,7 @@ export enum LabwareType {
   Reservoir12 = "12 Well Reservoir",
   TubeRack15Falcon15 = "15 Slot Falcon Tube Rack",
   TubeRack24Eppendorf15 = "24 Slot Eppendorf 1.5mL Tube Rack",
+  FalconPetriDish90mm = "90mm Falcon Petri Dish",
 }
 
 
@@ -492,6 +493,9 @@ const fromJSONWelltoWell: (jw: JSONWell) => Well = (jw): Well => {
     case LabwareType.WellPlate96:
       const wp = new WellPlate96(jw.slot)
       return wp.wells.find(v => v.locationString === jw.locationString) as Well
+    case LabwareType.FalconPetriDish90mm:
+      const wp8 = new FalconPetriDish90mm(jw.slot)
+      return wp8.wells.find(v => v.locationString === jw.locationString) as Well
   }
   throw Error("Unknown Labware")
 }
@@ -807,5 +811,45 @@ ${this.name} = protocol.load_labware('opentrons_24_tuberack_eppendorf_1.5ml_safe
 
   get wellHeight(): number {
     throw new Error("Accessing TubeRack24Eppendorf15 well size!!!")
+  }
+}
+
+export class FalconPetriDish90mm implements WellPlate {
+  isWellPlate: true = true;
+  readonly name: string;
+  numOfLetterWells = 3;
+  numOfNumberWells = 3;
+  readonly slot: number;
+  readonly type = LabwareType.FalconPetriDish90mm;
+  readonly wells: Well[];
+  readonly wellDiameter = 20.66;
+
+  getPythonInit(): string {
+    return `
+# ${this.type};${JSON.stringify({slot: this.slot})}
+${this.name} = protocol.load_labware('falcon_petri_dish_90mm', ${this.slot})`;
+  }
+
+  static fromImportComment(comment: string): Labware {
+    const [, json] = comment.split(";")
+    const {slot} = JSON.parse(json) as { slot: number }
+    return new FalconPetriDish90mm(slot)
+  }
+
+  constructor(slot: number) {
+    this.name = "the_falcon_petri_dish_90mm_in_slot_" + slot
+    this.wells = []
+    this.slot = slot
+    const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"];
+    const usedLetters = letters.slice(0, this.numOfLetterWells)
+    usedLetters.forEach(val => {
+      for (let i = 1; i <= this.numOfNumberWells; i++) {
+        this.wells.push(new Well(this, val + i))
+      }
+    })
+  }
+
+  get wellHeight(): number {
+    throw new Error("Accessing Falcon Petri Dish 90mm well size!!!")
   }
 }

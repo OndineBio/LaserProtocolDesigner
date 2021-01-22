@@ -12,6 +12,7 @@ import {
   Step,
   StepType, WellPlate12, WellPlate24, WellPlate48, WellPlate6,
   WellPlate96,
+  FalconPetriDish90mm,
 } from "./datatypes";
 import {StepList} from "./components/StepList";
 import {AppBar, createStyles, Fab, TextField, Theme, Toolbar, Typography} from "@material-ui/core";
@@ -136,6 +137,7 @@ export default function App() {
     LabwareType.WellPlate6,
     LabwareType.TubeRack15Falcon15,
     LabwareType.TubeRack24Eppendorf15,
+    LabwareType.FalconPetriDish90mm,
   ]
 
   const [selectedLabware, setSelectedLabware] = useState<Labware[]>([] as Labware[])
@@ -161,6 +163,8 @@ export default function App() {
             return new TubeRack15Falcon15(slot)
           case LabwareType.TubeRack24Eppendorf15:
             return new TubeRack24Eppendorf15(slot)
+          case LabwareType.FalconPetriDish90mm:
+            return new FalconPetriDish90mm(slot)
           default:
             console.error(selected)
             throw new Error("Invalid Labware Type")
